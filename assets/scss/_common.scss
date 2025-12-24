@@ -253,7 +253,10 @@ hr {
 		font-size: 14px;
 		border-radius: 5px;
 
+		-webkit-user-select: none;
 		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
 		font-weight: 400;
 		letter-spacing: 1px;
 		line-height: 0;
@@ -348,7 +351,10 @@ hr {
 	text-transform: capitalize;
 
 	padding: 25px 57px;
+	-webkit-user-select: none;
 	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 
 	cursor: pointer;
 	display: inline-block;
