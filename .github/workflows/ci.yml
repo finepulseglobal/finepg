@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, master, feat/* ]
+  push:
+    branches: [ feat/* ]
+
+jobs:
+  php-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, xml
+
+      - name: Install Composer
+        run: composer install --no-interaction --no-progress --no-suggest
+
+      - name: PHP lint
+        run: |
+          set -e
+          find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Run basic checks
+        run: |
+          echo "Files changed:" && git --no-pager diff --name-only ${{ github.sha }} || true
