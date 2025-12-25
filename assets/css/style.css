@@ -47,10 +47,20 @@
     color: #fff;
 }
 
-/* Hide label on small screens to avoid covering content */
+/* Compact label on small screens */
 @media (max-width: 576px) {
-    .whatsapp-label { display: none; }
-    .whatsapp-wrapper { right: 12px; bottom: 18px; }
+    .whatsapp-label {
+        display: inline-block;
+        padding: 6px 8px;
+        font-size: 12px;
+        border-radius: 16px;
+        white-space: nowrap;
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .whatsapp-wrapper { right: 12px; bottom: 18px; gap: 6px; }
+    .whatsapp-float { width: 48px; height: 48px; font-size: 24px; line-height: 48px; }
 }
 
 /* =========================
@@ -133,3 +143,10 @@
         font-size: 16px;
     }
 }
+
+/* Ensure standard animation-timing-function is set for compatibility */
+.bounce-animate {
+    -webkit-animation-timing-function: linear;
+    animation-timing-function: linear;
+}
+
