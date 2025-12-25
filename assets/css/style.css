@@ -24,33 +24,83 @@
     color: #fff;
 }
 
+/* =========================
+   FAQ CLEAN & RESPONSIVE FIX
+========================= */
+
 .faq-area .card {
     border: 1px solid #eaeaea;
     margin-bottom: 15px;
     border-radius: 6px;
+    overflow: hidden;
 }
 
+/* Header */
 .faq-area .card-header {
     background: #fff;
-    padding: 18px 25px;
+    padding: 0;
 }
 
-.faq-area .btn-link {
+/* Button reset */
+.faq-area .card-header button {
     width: 100%;
-    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    font-size: 16px;
     font-weight: 600;
-    color: #ffffff;
-    text-decoration: none;
+    color: #0b1c39;
+
+    background: none;
+    border: none;
+    padding: 16px 20px;
+
+    text-align: left;
+    white-space: normal;
+    line-height: 1.4;
+
+    text-decoration: none !important;
+    outline: none;
+    box-shadow: none;
+
+    transition: none !important;
+    animation: none !important;
 }
 
-.faq-area .btn-link i {
-    margin-right: 10px;
+/* Remove underline & hover effects */
+.faq-area .card-header button:hover,
+.faq-area .card-header button:focus {
+    text-decoration: none !important;
+    background: none;
+    color: #0b1c39;
+}
+
+/* Icon styling */
+.faq-area .card-header button i {
+    font-size: 18px;
     color: #ff5f13;
+    flex-shrink: 0;
 }
 
+/* Body */
 .faq-area .card-body {
     font-size: 15px;
-    line-height: 1.8;
+    line-height: 1.7;
     color: #506172;
+    padding: 15px 20px;
 }
 
+/* =========================
+   MOBILE FIX
+========================= */
+@media (max-width: 576px) {
+    .faq-area .card-header button {
+        font-size: 14px;
+        padding: 14px 16px;
+    }
+
+    .faq-area .card-header button i {
+        font-size: 16px;
+    }
+}
