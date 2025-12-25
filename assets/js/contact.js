@@ -53,23 +53,26 @@ $(document).ready(function(){
                     beforeSend: function() {
                         $('.submit-btn').html('Sending...').prop('disabled', true);
                     },
-                    success: function() {
-                        // Reset form and show success message
-                        $('#contactForm')[0].reset();
-                        $('.submit-btn').html('Request a Quote').prop('disabled', false);
-                        $('#contactForm').fadeTo( "slow", 1, function() {
-                            $('#success').fadeIn()
+                    success: function(data, status, xhr) {
+                        // Check if response is 'OK' or contains success indicator
+                        if (data.trim() === 'OK') {
+                            // Reset form and show success message
+                            $('#contactForm')[0].reset();
+                            $('.submit-btn').html('Request a Quote').prop('disabled', false);
                             $('.modal').modal('hide');
-		                	$('#success').modal('show');
-                        })
+                            $('#success').modal('show');
+                        } else {
+                            // Show error if response is not OK
+                            $('.submit-btn').html('Request a Quote').prop('disabled', false);
+                            $('.modal').modal('hide');
+                            $('#error').modal('show');
+                        }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.log('Form submission error:', xhr.responseText);
                         $('.submit-btn').html('Request a Quote').prop('disabled', false);
-                        $('#contactForm').fadeTo( "slow", 1, function() {
-                            $('#error').fadeIn()
-                            $('.modal').modal('hide');
-		                	$('#error').modal('show');
-                        })
+                        $('.modal').modal('hide');
+                        $('#error').modal('show');
                     }
                 })
             }

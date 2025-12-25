@@ -60,17 +60,23 @@ $body .= '</body></html>';
 // Try to send via PHPMailer if available (composer autoload)
 $sent = false;
 $error = null;
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+
+// Temporarily disable SMTP to use mail() fallback for testing
+$use_smtp = false; // Set to true when SMTP is properly configured
+
+if ($use_smtp && file_exists(__DIR__ . '/vendor/autoload.php')) {
 	require __DIR__ . '/vendor/autoload.php';
 	// load optional SMTP config if present
 	$smtpCfg = [];
 	if (file_exists(__DIR__ . '/smtp_config.php')) {
 		$smtpCfg = include __DIR__ . '/smtp_config.php';
 	}
-	try {
-		$mail = new PHPMailer\PHPMailer\PHPMailer(true);
-		// SMTP if configured
-		if (!empty($smtpCfg)) {
+	
+	// Only use SMTP if password is not placeholder
+	if (!empty($smtpCfg) && $smtpCfg['password'] !== 'your-app-password-here') {
+		try {
+			$mail = new PHPMailer\PHPMailer\PHPMailer(true);
+			// SMTP if configured
 			$mail->isSMTP();
 			$mail->Host = $smtpCfg['host'] ?? '';
 			$mail->SMTPAuth = $smtpCfg['smtp_auth'] ?? true;
@@ -78,40 +84,53 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 			$mail->Password = $smtpCfg['password'] ?? '';
 			$mail->SMTPSecure = $smtpCfg['encryption'] ?? ($smtpCfg['port'] == 465 ? 'ssl' : 'tls');
 			$mail->Port = $smtpCfg['port'] ?? 587;
+			// From and Reply-To
+			$mail->setFrom($smtpCfg['from_email'] ?? 'no-reply@finepg.com', $smtpCfg['from_name'] ?? 'FinePulse Website');
+			$mail->addReplyTo($email, $name);
+			$mail->addAddress($to);
+			$mail->isHTML(true);
+			$mail->Subject = $mailSubject;
+			$mail->Body = $body;
+			$mail->AltBody = strip_tags(str_replace('<br>', "\n", $body));
+			$sent = $mail->send();
+		} catch (Exception $e) {
+			$error = $e->getMessage();
+			$sent = false;
 		}
-		// From and Reply-To
-		$mail->setFrom($smtpCfg['from_email'] ?? 'no-reply@finepg.com', $smtpCfg['from_name'] ?? 'FinePulse Website');
-		$mail->addReplyTo($email, $name);
-		$mail->addAddress($to);
-		$mail->isHTML(true);
-		$mail->Subject = $mailSubject;
-		$mail->Body = $body;
-		$mail->AltBody = strip_tags(str_replace('<br>', "\n", $body));
-		$sent = $mail->send();
-	} catch (Exception $e) {
-		$error = $e->getMessage();
-		$sent = false;
 	}
 }
 
 // Fallback to mail() if PHPMailer not available or send failed
 if (!$sent) {
-	$headers = "From: " . $email . "\r\n";
+	// Use a proper From header that won't be rejected
+	$headers = "From: no-reply@finepg.com\r\n";
 	$headers .= "Reply-To: " . $email . "\r\n";
 	$headers .= "MIME-Version: 1.0\r\n";
 	$headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+	$headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+	
+	// Log attempt for debugging
+	error_log('Attempting to send email via mail() function to: ' . $to);
+	
 	$sent = mail($to, $mailSubject, $body, $headers);
+	
+	if (!$sent) {
+		$error = 'mail() function failed';
+		error_log('mail() function failed for email to: ' . $to);
+	}
 }
 
 if ($sent) {
 	echo 'OK';
 } else {
 	http_response_code(500);
+	// Log the error for debugging
+	error_log('Email sending failed. Error: ' . ($error ?: 'Unknown error'));
 	if (!empty($error)) {
 		// Don't leak internal errors in production; useful for local debug.
 		echo 'Failed to send message. ' . htmlspecialchars($error);
 	} else {
-		echo 'Failed to send message.';
+		echo 'Failed to send message. Please try again or contact us directly.';
 	}
 }
 
