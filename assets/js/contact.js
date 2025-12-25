@@ -16,42 +16,33 @@ $(document).ready(function(){
                     required: true,
                     minlength: 2
                 },
-                subject: {
-                    required: true,
-                    minlength: 4
-                },
-                number: {
-                    required: true,
-                    minlength: 5
-                },
                 email: {
                     required: true,
                     email: true
                 },
+                number: {
+                    minlength: 5
+                },
                 message: {
                     required: true,
-                    minlength: 20
+                    minlength: 10
                 }
             },
             messages: {
                 name: {
-                    required: "come on, you have a name, don't you?",
-                    minlength: "your name must consist of at least 2 characters"
-                },
-                subject: {
-                    required: "come on, you have a subject, don't you?",
-                    minlength: "your subject must consist of at least 4 characters"
-                },
-                number: {
-                    required: "come on, you have a number, don't you?",
-                    minlength: "your Number must consist of at least 5 characters"
+                    required: "Please enter your name",
+                    minlength: "Your name must be at least 2 characters"
                 },
                 email: {
-                    required: "no email, no message"
+                    required: "Please enter your email address",
+                    email: "Please enter a valid email address"
+                },
+                number: {
+                    minlength: "Phone number must be at least 5 characters"
                 },
                 message: {
-                    required: "um...yea, you have to write something to send this form.",
-                    minlength: "thats all? really?"
+                    required: "Please enter your message",
+                    minlength: "Message must be at least 10 characters"
                 }
             },
             submitHandler: function(form) {
@@ -59,17 +50,21 @@ $(document).ready(function(){
                     type:"POST",
                     data: $(form).serialize(),
                     url:"contact_process.php",
+                    beforeSend: function() {
+                        $('.submit-btn').html('Sending...').prop('disabled', true);
+                    },
                     success: function() {
-                        $('#contactForm :input').attr('disabled', 'disabled');
+                        // Reset form and show success message
+                        $('#contactForm')[0].reset();
+                        $('.submit-btn').html('Request a Quote').prop('disabled', false);
                         $('#contactForm').fadeTo( "slow", 1, function() {
-                            $(this).find(':input').attr('disabled', 'disabled');
-                            $(this).find('label').css('cursor','default');
                             $('#success').fadeIn()
                             $('.modal').modal('hide');
 		                	$('#success').modal('show');
                         })
                     },
                     error: function() {
+                        $('.submit-btn').html('Request a Quote').prop('disabled', false);
                         $('#contactForm').fadeTo( "slow", 1, function() {
                             $('#error').fadeIn()
                             $('.modal').modal('hide');
