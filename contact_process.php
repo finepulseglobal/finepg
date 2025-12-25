@@ -23,6 +23,7 @@ $departure = isset($_POST['departure']) ? trim($_POST['departure']) : '';
 $arrival = isset($_POST['arrival']) ? trim($_POST['arrival']) : '';
 $weight = isset($_POST['weight']) ? trim($_POST['weight']) : '';
 $message = isset($_POST['message']) ? trim($_POST['message']) : '';
+$extra_service = isset($_POST['extra_service']) ? trim($_POST['extra_service']) : '';
 
 // basic validation
 if (empty($name) || empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL) || empty($message)) {
@@ -39,7 +40,7 @@ if (has_header_injection($name) || has_header_injection($email) || has_header_in
 }
 
 // prepare email content
-$to = 'info@sendpg.com';
+$to = 'info@finepg.com';
 $mailSubject = 'Website message: ' . ($subject_field ?: 'Quote Request');
 
 $body = '<html><body>';
@@ -51,6 +52,7 @@ if ($subject_field) $body .= '<p><strong>Service:</strong> ' . htmlspecialchars(
 if ($departure) $body .= '<p><strong>City of Departure:</strong> ' . htmlspecialchars($departure) . '</p>';
 if ($arrival) $body .= '<p><strong>City of Arrival:</strong> ' . htmlspecialchars($arrival) . '</p>';
 if ($weight) $body .= '<p><strong>KG/CBM:</strong> ' . htmlspecialchars($weight) . '</p>';
+if ($extra_service) $body .= '<p><strong>Extra Service:</strong> ' . htmlspecialchars($extra_service) . '</p>';
 $body .= '<hr>';
 $body .= '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
 $body .= '</body></html>';
