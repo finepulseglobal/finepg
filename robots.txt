@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /contact_process.php
+Disallow: /assets/vendor/
+
+Allow: /
+
+Sitemap: https://finepg.com/sitemap.xml
