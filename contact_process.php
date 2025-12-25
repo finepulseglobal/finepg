@@ -39,7 +39,7 @@ if (has_header_injection($name) || has_header_injection($email) || has_header_in
 }
 
 // prepare email content
-$to = 'info@finepg.com';
+$to = 'info@sendpg.com';
 $mailSubject = 'Website message: ' . ($subject_field ?: 'Quote Request');
 
 $body = '<html><body>';

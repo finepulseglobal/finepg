@@ -55,33 +55,6 @@ $(document).ready(function(){
                 }
             },
             submitHandler: function(form) {
-                // Build WhatsApp message and open chat in new tab (keeps existing AJAX submission)
-                try {
-                    var $f = $(form);
-                    var waLines = [];
-                    var vals = {
-                        'Name': $f.find('input[name="name"]').val() || '',
-                        'Email': $f.find('input[name="email"]').val() || '',
-                        'Contact Number': $f.find('input[name="number"]').val() || '',
-                        'Service': $f.find('select[name="subject"]').val() || '',
-                        'Departure': $f.find('input[name="departure"]').val() || '',
-                        'Arrival': $f.find('input[name="arrival"]').val() || '',
-                        'KG/CBM': $f.find('input[name="weight"]').val() || '',
-                        'Message': $f.find('textarea[name="message"]').val() || ''
-                    };
-                    for (var k in vals) {
-                        if (Object.prototype.hasOwnProperty.call(vals, k) && vals[k]) {
-                            waLines.push(k + ': ' + vals[k]);
-                        }
-                    }
-                    var waText = waLines.join('\n');
-                    var waNumber = '8613411179135'; // existing WhatsApp contact
-                    var waUrl = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(waText);
-                    window.open(waUrl, '_blank');
-                } catch (e) {
-                    console.warn('WhatsApp prefill failed', e);
-                }
-
                 $(form).ajaxSubmit({
                     type:"POST",
                     data: $(form).serialize(),
