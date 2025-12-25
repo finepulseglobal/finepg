@@ -1,17 +1,13 @@
 <?php
 
 // contact_process.php
-// Enhanced: supports PHPMailer via Composer (preferred) with SMTP, otherwise falls back to mail()
+// Modified to redirect to WhatsApp instead of sending email
 
 // Use POST only
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	http_response_code(405);
 	echo 'Method Not Allowed';
 	exit;
-}
-
-function has_header_injection($str) {
-	return preg_match('/[\r\n]/', $str);
 }
 
 // collect and sanitize inputs
@@ -32,106 +28,28 @@ if (empty($name) || empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL) 
 	exit;
 }
 
-// protect against header injection
-if (has_header_injection($name) || has_header_injection($email) || has_header_injection($subject_field)) {
-	http_response_code(400);
-	echo 'Invalid input.';
-	exit;
-}
+// Prepare WhatsApp message
+$whatsapp_message = "*New Quote Request from Website*\n\n";
+$whatsapp_message .= "*Name:* $name\n";
+$whatsapp_message .= "*Email:* $email\n";
+if ($number) $whatsapp_message .= "*Contact Number:* $number\n";
+if ($subject_field) $whatsapp_message .= "*Service:* $subject_field\n";
+if ($departure) $whatsapp_message .= "*City of Departure:* $departure\n";
+if ($arrival) $whatsapp_message .= "*City of Arrival:* $arrival\n";
+if ($weight) $whatsapp_message .= "*KG/CBM:* $weight\n";
+if ($extra_service) $whatsapp_message .= "*Extra Service:* $extra_service\n";
+$whatsapp_message .= "\n*Message:*\n$message";
 
-// prepare email content
-$to = 'info@finepg.com';
-$mailSubject = 'Website message: ' . ($subject_field ?: 'Quote Request');
+// URL encode the message for WhatsApp
+$encoded_message = urlencode($whatsapp_message);
 
-$body = '<html><body>';
-$body .= '<h2>New message from FinePulse website</h2>';
-$body .= '<p><strong>Name:</strong> ' . htmlspecialchars($name) . '</p>';
-$body .= '<p><strong>Email:</strong> ' . htmlspecialchars($email) . '</p>';
-if ($number) $body .= '<p><strong>Contact Number:</strong> ' . htmlspecialchars($number) . '</p>';
-if ($subject_field) $body .= '<p><strong>Service:</strong> ' . htmlspecialchars($subject_field) . '</p>';
-if ($departure) $body .= '<p><strong>City of Departure:</strong> ' . htmlspecialchars($departure) . '</p>';
-if ($arrival) $body .= '<p><strong>City of Arrival:</strong> ' . htmlspecialchars($arrival) . '</p>';
-if ($weight) $body .= '<p><strong>KG/CBM:</strong> ' . htmlspecialchars($weight) . '</p>';
-if ($extra_service) $body .= '<p><strong>Extra Service:</strong> ' . htmlspecialchars($extra_service) . '</p>';
-$body .= '<hr>';
-$body .= '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
-$body .= '</body></html>';
+// WhatsApp number (replace with your actual WhatsApp number)
+$whatsapp_number = '8613411179135';
 
-// Try to send via PHPMailer if available (composer autoload)
-$sent = false;
-$error = null;
+// Create WhatsApp URL
+$whatsapp_url = "https://wa.me/$whatsapp_number?text=$encoded_message";
 
-// Temporarily disable SMTP to use mail() fallback for testing
-$use_smtp = false; // Set to true when SMTP is properly configured
-
-if ($use_smtp && file_exists(__DIR__ . '/vendor/autoload.php')) {
-	require __DIR__ . '/vendor/autoload.php';
-	// load optional SMTP config if present
-	$smtpCfg = [];
-	if (file_exists(__DIR__ . '/smtp_config.php')) {
-		$smtpCfg = include __DIR__ . '/smtp_config.php';
-	}
-	
-	// Only use SMTP if password is not placeholder
-	if (!empty($smtpCfg) && $smtpCfg['password'] !== 'your-app-password-here') {
-		try {
-			$mail = new PHPMailer\PHPMailer\PHPMailer(true);
-			// SMTP if configured
-			$mail->isSMTP();
-			$mail->Host = $smtpCfg['host'] ?? '';
-			$mail->SMTPAuth = $smtpCfg['smtp_auth'] ?? true;
-			$mail->Username = $smtpCfg['username'] ?? '';
-			$mail->Password = $smtpCfg['password'] ?? '';
-			$mail->SMTPSecure = $smtpCfg['encryption'] ?? ($smtpCfg['port'] == 465 ? 'ssl' : 'tls');
-			$mail->Port = $smtpCfg['port'] ?? 587;
-			// From and Reply-To
-			$mail->setFrom($smtpCfg['from_email'] ?? 'no-reply@finepg.com', $smtpCfg['from_name'] ?? 'FinePulse Website');
-			$mail->addReplyTo($email, $name);
-			$mail->addAddress($to);
-			$mail->isHTML(true);
-			$mail->Subject = $mailSubject;
-			$mail->Body = $body;
-			$mail->AltBody = strip_tags(str_replace('<br>', "\n", $body));
-			$sent = $mail->send();
-		} catch (Exception $e) {
-			$error = $e->getMessage();
-			$sent = false;
-		}
-	}
-}
-
-// Fallback to mail() if PHPMailer not available or send failed
-if (!$sent) {
-	// Use a proper From header that won't be rejected
-	$headers = "From: no-reply@finepg.com\r\n";
-	$headers .= "Reply-To: " . $email . "\r\n";
-	$headers .= "MIME-Version: 1.0\r\n";
-	$headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-	$headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
-	
-	// Log attempt for debugging
-	error_log('Attempting to send email via mail() function to: ' . $to);
-	
-	$sent = mail($to, $mailSubject, $body, $headers);
-	
-	if (!$sent) {
-		$error = 'mail() function failed';
-		error_log('mail() function failed for email to: ' . $to);
-	}
-}
-
-if ($sent) {
-	echo 'OK';
-} else {
-	http_response_code(500);
-	// Log the error for debugging
-	error_log('Email sending failed. Error: ' . ($error ?: 'Unknown error'));
-	if (!empty($error)) {
-		// Don't leak internal errors in production; useful for local debug.
-		echo 'Failed to send message. ' . htmlspecialchars($error);
-	} else {
-		echo 'Failed to send message. Please try again or contact us directly.';
-	}
-}
+// Return the WhatsApp URL to JavaScript
+echo json_encode(['status' => 'success', 'whatsapp_url' => $whatsapp_url]);
 
 ?>

@@ -54,15 +54,23 @@ $(document).ready(function(){
                         $('.submit-btn').html('Sending...').prop('disabled', true);
                     },
                     success: function(data, status, xhr) {
-                        // Check if response is 'OK' or contains success indicator
-                        if (data.trim() === 'OK') {
-                            // Reset form and show success message
-                            $('#contactForm')[0].reset();
-                            $('.submit-btn').html('Request a Quote').prop('disabled', false);
-                            $('.modal').modal('hide');
-                            $('#success').modal('show');
-                        } else {
-                            // Show error if response is not OK
+                        try {
+                            var response = JSON.parse(data);
+                            if (response.status === 'success') {
+                                // Reset form
+                                $('#contactForm')[0].reset();
+                                $('.submit-btn').html('Request a Quote').prop('disabled', false);
+                                // Open WhatsApp
+                                window.open(response.whatsapp_url, '_blank');
+                                // Show success modal
+                                $('.modal').modal('hide');
+                                $('#success').modal('show');
+                            } else {
+                                $('.submit-btn').html('Request a Quote').prop('disabled', false);
+                                $('.modal').modal('hide');
+                                $('#error').modal('show');
+                            }
+                        } catch (e) {
                             $('.submit-btn').html('Request a Quote').prop('disabled', false);
                             $('.modal').modal('hide');
                             $('#error').modal('show');
