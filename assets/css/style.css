@@ -47,10 +47,24 @@
     color: #fff;
 }
 
-/* Hide label on small screens to avoid covering content */
+/* Show a compact label on small screens; hide only on very narrow viewports */
 @media (max-width: 576px) {
+    .whatsapp-label {
+        display: inline-block;
+        padding: 8px 10px;
+        font-size: 12px;
+        border-radius: 18px;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .whatsapp-wrapper { right: 12px; bottom: 18px; gap: 8px; }
+}
+
+/* Extremely small screens: hide label to avoid UI collisions */
+@media (max-width: 360px) {
     .whatsapp-label { display: none; }
-    .whatsapp-wrapper { right: 12px; bottom: 18px; }
 }
 
 /* =========================
