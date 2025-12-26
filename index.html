@@ -129,7 +129,8 @@
     .footer-padding { padding: 40px 0 20px !important; }
     
     /* Enhanced Hero Section */
-    .slider-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1; }
+    .slider-area { position: relative; }
+    .slider-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.2); z-index: 1; }
     .slider-area .container { position: relative; z-index: 2; }
     .hero__caption h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 20px; }
     .hero__caption p { font-size: 1.2rem; margin-bottom: 30px; color: white; line-height: 1.6; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
@@ -151,11 +152,14 @@
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     
     /* FAQ Styling */
-    .card-header { background: #f15f22 !important; border: none !important; }
-    .card-header .btn { color: white !important; text-decoration: none !important; }
+    .faq-area { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
+    .card { border: none !important; margin-bottom: 15px; border-radius: 10px !important; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .card-header { background: linear-gradient(135deg, #f15f22, #ff7a47) !important; border: none !important; padding: 20px; }
+    .card-header .btn { color: white !important; text-decoration: none !important; font-weight: 600; font-size: 1.1rem; text-align: left; }
     .card-header .btn:hover { color: white !important; }
     .card-header .btn:focus { color: white !important; box-shadow: none !important; }
-    .card-header .btn i { color: white !important; }
+    .card-header .btn i { color: white !important; margin-right: 15px; font-size: 1.2rem; }
+    .card-body { padding: 25px; background: white; font-size: 1rem; line-height: 1.7; color: #555; }
     .slider-area { min-height: 500px !important; }
     @media (min-width: 992px) {
         .slider-height { min-height: 800px !important; }
