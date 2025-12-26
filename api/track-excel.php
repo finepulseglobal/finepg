@@ -11,7 +11,7 @@ if (empty($trackingId)) {
 
 // Google Sheets CSV URL (replace with your actual sheet URL)
 // To get this URL: File > Publish to web > CSV format
-$sheetUrl = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=csv&gid=0';
+$sheetUrl = 'https://docs.google.com/spreadsheets/d/11Gm1Nq1M03yEVy1QpH5Tv3d79VCzhNWSrngHdscxAN8/export?format=csv&gid=0';
 
 // Read CSV data
 $csvData = @file_get_contents($sheetUrl);
@@ -52,6 +52,8 @@ $response = [
     'customerName' => $trackingData['Customer_Name'] ?? '',
     'origin' => $trackingData['Origin'] ?? '',
     'destination' => $trackingData['Destination'] ?? '',
+    'weight' => $trackingData['Weight'] ?? '',
+    'serviceType' => $trackingData['Service_Type'] ?? '',
     'events' => []
 ];
 

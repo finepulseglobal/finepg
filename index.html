@@ -864,6 +864,16 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                             <strong>Location:</strong> ${data.location}<br>
                             <strong>Last Update:</strong> ${new Date(data.lastUpdate).toLocaleString()}
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Origin:</strong> ${data.origin}</p>
+                                <p><strong>Destination:</strong> ${data.destination}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Weight:</strong> ${data.weight}</p>
+                                <p><strong>Service:</strong> ${data.serviceType}</p>
+                            </div>
+                        </div>
                         <p><strong>Estimated Delivery:</strong> ${new Date(data.estimatedDelivery).toLocaleDateString()}</p>
                     </div>
                     
