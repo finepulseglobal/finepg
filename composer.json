@@ -1,7 +1,0 @@
-{
-  "name": "finepg/finepg-website",
-  "description": "FinePulse Global Limited static site with contact handler",
-  "require": {
-    "phpmailer/phpmailer": "^6.0"
-  }
-}
