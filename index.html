@@ -129,15 +129,15 @@
     .footer-padding { padding: 40px 0 20px !important; }
     
     /* Enhanced Hero Section */
-    .slider-area { position: relative; }
-    .slider-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.2); z-index: 1; }
+    .slider-area { position: relative; background-image: url('assets/img/hero/hero1.jpg'); background-size: cover; background-position: center; }
+    .slider-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.2); z-index: 1; pointer-events: none; }
     .slider-area .container { position: relative; z-index: 2; }
     .hero__caption h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 20px; }
     .hero__caption p { font-size: 1.2rem; margin-bottom: 30px; color: white; line-height: 1.6; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
     .hero-btns { display: flex; gap: 15px; flex-wrap: wrap; }
     .btn-outline { background: transparent; border: 2px solid #007bff; color: #007bff; }
     .btn-outline:hover { background: #007bff; color: white; }
-    .hero-form { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .hero-form { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; z-index: 3; }
     .hero-form h4 { margin-bottom: 20px; color: #333; }
     .tracking-form .input-form { position: relative; }
     .tracking-form input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 5px; margin-bottom: 15px; }
