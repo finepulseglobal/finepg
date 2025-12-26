@@ -740,8 +740,8 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                 resultsDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-3">Fetching tracking information...</p></div>';
                 $('#trackingModal').modal('show');
                 
-                // Real API call
-                fetch(`api/track.php?tracking_id=${encodeURIComponent(trackingId)}`)
+                // Excel-based API call
+                fetch(`api/track-excel.php?tracking_id=${encodeURIComponent(trackingId)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.error) {
