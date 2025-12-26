@@ -127,6 +127,25 @@
     .mb-50 { margin-bottom: 25px !important; }
     .testimonial-padding { padding: 40px 0 !important; }
     .footer-padding { padding: 40px 0 20px !important; }
+    
+    /* Enhanced Hero Section */
+    .hero__caption h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 20px; }
+    .hero__caption p { font-size: 1.2rem; margin-bottom: 30px; color: #666; line-height: 1.6; }
+    .hero-btns { display: flex; gap: 15px; flex-wrap: wrap; }
+    .btn-outline { background: transparent; border: 2px solid #f15f22; color: #f15f22; }
+    .btn-outline:hover { background: #f15f22; color: white; }
+    .hero-form { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .hero-form h4 { margin-bottom: 20px; color: #333; }
+    .tracking-form .input-form { position: relative; }
+    .tracking-form input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 5px; margin-bottom: 15px; }
+    .track-btn { width: 100%; background: #f15f22; color: white; border: none; padding: 15px; border-radius: 5px; font-weight: 600; }
+    .track-btn:hover { background: #d54e1e; }
+    .form-note { font-size: 0.9rem; color: #666; margin-top: 10px; }
+    @media (max-width: 768px) {
+        .hero__caption h1 { font-size: 2.5rem; }
+        .hero-btns { justify-content: center; }
+        .hero-form { margin-top: 30px; }
+    }
     </style>
     </head>
 <body>
@@ -210,28 +229,33 @@
 </header>
 <main>
     <!--? slider Area Start-->
-    <div class="slider-area ">
+    <div class="slider-area">
         <div class="slider-active">
             <!-- Single Slider -->
             <div class="single-slider slider-height d-flex align-items-center">
                 <div class="container">
-                    <div class="row">
-                        <div class="col-xl-9 col-lg-9">
+                    <div class="row align-items-center">
+                        <div class="col-xl-8 col-lg-8">
                             <div class="hero__caption">
-                                <h1>Powering Global Trade <span>With</span> Precision!</h1>
-                            </div>
-                            <!--Hero form -->
-                            <form action="#" class="search-box">
-                                <div class="input-form">
-                                    <input type="text" placeholder="Your Tracking ID">
+                                <h1>Global Logistics <span>Made Simple</span></h1>
+                                <p>Ship anywhere in the world with confidence. From China to Nigeria, USA to Europe - we handle customs, duties, and delivery with precision.</p>
+                                <div class="hero-btns">
+                                    <a href="https://wa.me/8613411179135?text=Hello%20FinePulse%20Global,%20I%20need%20a%20shipping%20quote" class="btn hero-btn" target="_blank">Get Quote Now</a>
+                                    <a href="#services" class="btn btn-outline">Our Services</a>
                                 </div>
-                                <div class="search-form">
-                                    <a href="#">Track & Trace</a>
-                                </div>	
-                            </form>	
-                            <!-- Hero Pera -->
-                            <div class="hero-pera">
-                                <p>For order status inquiry</p>
+                            </div>
+                        </div>
+                        <div class="col-xl-4 col-lg-4">
+                            <!--Hero form -->
+                            <div class="hero-form">
+                                <h4>Track Your Shipment</h4>
+                                <form action="#" class="tracking-form">
+                                    <div class="input-form">
+                                        <input type="text" placeholder="Enter Tracking ID" required>
+                                        <button type="submit" class="track-btn">Track Now</button>
+                                    </div>
+                                </form>
+                                <p class="form-note">Enter your tracking number to get real-time updates</p>
                             </div>
                         </div>
                     </div>
@@ -408,18 +432,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Form Start -->
-                <div class="col-xl-4 col-lg-5 col-md-8">
-                    <div class="testimonial-form text-center">
-                        <h3>Ready to Ship or deliver a package?</h3>
-                        <button type="button" name="submit" class="submit-btn"
-                            onclick="window.open('https://wa.me/8613411179135?text=Hello%20FinePulse%20Global,%20I%20need%20your%20services','_blank')">
-                            WhatsApp Me
-                        </button>
 
-                </div>
-                </div>
-                <!-- Form End -->
             </div>
         </div>
     </div>
@@ -433,15 +446,7 @@
                     <span>Frequently Asked Questions</span>
                     <h2>Everything You Need to Know</h2>
                 </div>
-                <!-- FAQ Search -->
-                <div class="faq-search mb-40">
-                    <div class="input-group">
-                        <input type="text" id="faqSearch" class="form-control" placeholder="Search FAQs...">
-                        <div class="input-group-append">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 
@@ -695,25 +700,6 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
 
             <script>
             // FAQ Search Functionality
-            document.addEventListener('DOMContentLoaded', function() {
-                const searchInput = document.getElementById('faqSearch');
-                const faqCards = document.querySelectorAll('#faqAccordion .card');
-                
-                searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.toLowerCase();
-                    
-                    faqCards.forEach(function(card) {
-                        const question = card.querySelector('.btn').textContent.toLowerCase();
-                        const answer = card.querySelector('.card-body').textContent.toLowerCase();
-                        
-                        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = searchTerm === '' ? 'block' : 'none';
-                        }
-                    });
-                });
-            });
             
             // Lazy-load elements with data-background attribute using IntersectionObserver
             (function(){
@@ -743,37 +729,6 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
 
 <style>
 /* Compact Layout - Reduce Excessive Whitespace */
-.section-padding30 { padding: 40px 0 !important; }
-.padding-bottom { padding-bottom: 40px !important; }
-.pt-70 { padding-top: 40px !important; }
-.pb-40 { padding-bottom: 20px !important; }
-.mb-80 { margin-bottom: 40px !important; }
-.mb-50 { margin-bottom: 25px !important; }
-.mb-70 { margin-bottom: 35px !important; }
-.testimonial-padding { padding: 40px 0 !important; }
-.footer-padding { padding: 40px 0 20px !important; }
-.slider-area { min-height: 500px !important; }
-.single-cat { margin-bottom: 25px !important; }
-.single-info { margin-bottom: 20px !important; }
-.about-caption { margin-bottom: 25px !important; }
-
-/* FAQ Search Styling */
-.faq-search .form-control {
-    border: 2px solid #f15f22;
-    border-radius: 25px 0 0 25px;
-    padding: 12px 20px;
-    font-size: 16px;
-}
-.faq-search .input-group-text {
-    background: #f15f22;
-    border: 2px solid #f15f22;
-    border-radius: 0 25px 25px 0;
-    color: white;
-}
-.faq-search .form-control:focus {
-    border-color: #d54e1e;
-    box-shadow: 0 0 0 0.2rem rgba(241, 95, 34, 0.25);
-}
 
 /* Modal styling */
 .modal-content {
