@@ -215,7 +215,7 @@
                                 </div>
                                 <!-- Header-btn -->
                                 <div class="header-right-btn d-none d-lg-block ml-20">
-                                    <a href="https://wa.me/8613411179135?text=Hello%20FinePulse%20Global,%20I%20need%20a%20quote" class="btn header-btn" target="_blank">Get a Quote</a>
+                                    <a href="#" onclick="openWhatsApp('quote')" class="btn header-btn">Get a Quote</a>
                                 </div>
                             </div>
                         </div> 
@@ -243,7 +243,7 @@
                                 <h1>Global Logistics <span>Made Simple</span></h1>
                                 <p>Ship anywhere in the world with confidence. From China to Nigeria, USA to Europe - we handle customs, duties, and delivery with precision.</p>
                                 <div class="hero-btns">
-                                    <a href="https://wa.me/8613411179135?text=Hello%20FinePulse%20Global,%20I%20need%20a%20shipping%20quote" class="btn hero-btn" target="_blank">Get Quote Now</a>
+                                    <a href="#" onclick="openWhatsApp('quote')" class="btn hero-btn">Get Quote Now</a>
                                 </div>
                             </div>
                         </div>
@@ -599,7 +599,7 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <a href="https://wa.me/8613411179135" class="btn btn-primary" target="_blank">Contact Support</a>
+                <a href="#" onclick="openWhatsApp('support')" class="btn btn-primary" target="_blank">Contact Support</a>
             </div>
         </div>
     </div>
@@ -722,13 +722,82 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
     <script src="./assets/js/main.js"></script>
     
     <div class="whatsapp-wrapper">
-        <a href="https://wa.me/8613411179135?text=Hello%20FinePulse%20Global%2C%20I%20need%20assistance" class="whatsapp-label" target="_blank" rel="nofollow noopener noreferrer">Talk to a Live Agent</a>
-        <a href="https://wa.me/8613411179135?text=Hello%20FinePulse%20Global%2C%20I%20need%20assistance" class="whatsapp-float" target="_blank" rel="nofollow noopener noreferrer">
+        <div class="whatsapp-menu" id="whatsappMenu">
+            <div class="whatsapp-option" onclick="openWhatsApp('quote')">
+                <i class="fas fa-calculator"></i>
+                <span>Get Quote</span>
+            </div>
+            <div class="whatsapp-option" onclick="openWhatsApp('track')">
+                <i class="fas fa-search"></i>
+                <span>Track Shipment</span>
+            </div>
+            <div class="whatsapp-option" onclick="openWhatsApp('support')">
+                <i class="fas fa-headset"></i>
+                <span>General Support</span>
+            </div>
+            <div class="whatsapp-option" onclick="openWhatsApp('emergency')">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Emergency</span>
+            </div>
+        </div>
+        <a href="#" class="whatsapp-float" id="whatsappFloat" onclick="toggleWhatsAppMenu()">
             <i class="fab fa-whatsapp"></i>
         </a>
     </div>
 
             <script>
+            // WhatsApp Smart Communication System
+            function toggleWhatsAppMenu() {
+                const menu = document.getElementById('whatsappMenu');
+                menu.classList.toggle('active');
+            }
+            
+            function openWhatsApp(type) {
+                const contacts = {
+                    china: '8613411179135',
+                    nigeria: '2349166843506'
+                };
+                
+                let phone, message;
+                
+                switch(type) {
+                    case 'quote':
+                        phone = contacts.china;
+                        message = `Hello FinePulse Global,\n\nI need a shipping quote:\n\n📦 Origin: \n📍 Destination: \n⚖️ Weight/Dimensions: \n📅 Shipping Date: \n\nPlease provide pricing and timeline.`;
+                        break;
+                    case 'track':
+                        phone = contacts.china;
+                        const trackingId = document.getElementById('trackingInput')?.value || '';
+                        message = `Hello, I need help tracking my shipment${trackingId ? ': ' + trackingId : ''}.\n\nPlease provide current status and location.`;
+                        break;
+                    case 'support':
+                        phone = getUserLocation() === 'nigeria' ? contacts.nigeria : contacts.china;
+                        message = `Hello FinePulse Global,\n\nI need assistance with: \n\n(Please describe your inquiry)`;
+                        break;
+                    case 'emergency':
+                        phone = contacts.china;
+                        message = `🚨 URGENT: Hello FinePulse Global,\n\nI have an emergency regarding my shipment:\n\n(Please describe the urgent matter)`;
+                        break;
+                }
+                
+                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+                toggleWhatsAppMenu();
+            }
+            
+            function getUserLocation() {
+                // Simple location detection based on timezone or can be enhanced
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                return timezone.includes('Africa') ? 'nigeria' : 'international';
+            }
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                const wrapper = document.querySelector('.whatsapp-wrapper');
+                if (!wrapper.contains(e.target)) {
+                    document.getElementById('whatsappMenu').classList.remove('active');
+                }
+            });
+            
             // Tracking System
             document.getElementById('trackingForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -761,8 +830,7 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                         <i class="fas fa-exclamation-triangle"></i> ${message}
                     </div>
                     <p class="text-center mt-3">
-                        <a href="https://wa.me/8613411179135?text=Hello, I need help tracking my shipment: ${document.getElementById('trackingInput').value}" 
-                           class="btn btn-primary" target="_blank">
+                        <a href="#" onclick="openWhatsApp('track')" class="btn btn-primary" target="_blank">
                             Contact Support
                         </a>
                     </p>
@@ -925,6 +993,81 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
 }
 .border-bottom {
     border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* WhatsApp Smart Menu */
+.whatsapp-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.whatsapp-menu {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+.whatsapp-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.whatsapp-option {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+.whatsapp-option:hover {
+    background: #f8f9fa;
+}
+.whatsapp-option:last-child {
+    border-bottom: none;
+}
+.whatsapp-option i {
+    margin-right: 12px;
+    width: 20px;
+    color: #25d366;
+}
+.whatsapp-option span {
+    font-weight: 500;
+    color: #333;
+}
+.whatsapp-float {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: #25d366;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    transition: all 0.3s ease;
+}
+.whatsapp-float:hover {
+    background: #20b954;
+    transform: scale(1.1);
+    color: white;
+    text-decoration: none;
+}
+@media (max-width: 768px) {
+    .whatsapp-menu {
+        right: -10px;
+        min-width: 180px;
+    }
 }
 </style>
 
