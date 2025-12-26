@@ -1,7 +1,15 @@
 User-agent: *
-Disallow: /contact_process.php
-Disallow: /assets/vendor/
-
 Allow: /
 
+# Sitemap
 Sitemap: https://finepg.com/sitemap.xml
+
+# Block admin areas
+Disallow: /admin.html
+Disallow: /api/
+Disallow: /database/
+Disallow: /data/
+
+# Allow important pages
+Allow: /index.html
+Allow: /assets/
