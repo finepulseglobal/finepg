@@ -912,6 +912,17 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                 }, {rootMargin: '200px 0px'});
                 document.querySelectorAll('[data-background]').forEach(function(el){ io.observe(el); });
             })();
+            
+            // Source Code Protection
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('keydown', e => {
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'C') || (e.ctrlKey && e.key === 'u')) {
+                    e.preventDefault();
+                    alert('⚠️ Content is protected. Please contact FinePulse Global for inquiries.');
+                }
+            });
+            document.addEventListener('selectstart', e => e.preventDefault());
+            document.addEventListener('dragstart', e => e.preventDefault());
             </script>
 
 <style>
@@ -1068,6 +1079,22 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
         right: -10px;
         min-width: 180px;
     }
+}
+
+/* Source Code Protection */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 </style>
 
