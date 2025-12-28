@@ -52,50 +52,88 @@ $sampleData = [
 
 // Try Google Sheets first, fallback to sample data
 $sheetUrl = 'https://docs.google.com/spreadsheets/d/11Gm1Nq1M03yEVy1QpH5Tv3d79VCzhNWSrngHdscxAN8/export?format=csv&gid=0';
-$csvData = @file_get_contents($sheetUrl);
 
-if ($csvData && strpos($csvData, 'Tracking_ID') !== false) {
-    // Parse CSV data
-    $lines = explode("\n", $csvData);
-    $headers = str_getcsv($lines[0]);
-    
-    // Find tracking record
-    $trackingData = null;
-    for ($i = 1; $i < count($lines); $i++) {
-        if (empty(trim($lines[$i]))) continue;
-        
-        $row = str_getcsv($lines[$i]);
-        if (count($row) >= count($headers) && strtoupper($row[0]) === strtoupper($trackingId)) {
-            $trackingData = array_combine($headers, $row);
-            break;
-        }
+function fetch_url_contents($url) {
+    // Try file_get_contents first
+    $data = @file_get_contents($url);
+    if ($data !== false) return $data;
+
+    // Fallback to cURL
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        $data = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+        if ($data !== false && $data !== '') return $data;
     }
-    
-    if ($trackingData) {
-        $response = [
-            'trackingId' => $trackingData['Tracking_ID'],
-            'status' => $trackingData['Status'],
-            'location' => $trackingData['Current_Location'],
-            'estimatedDelivery' => $trackingData['Estimated_Delivery'],
-            'lastUpdate' => $trackingData['Last_Update'],
-            'customerName' => $trackingData['Customer_Name'] ?? '',
-            'origin' => $trackingData['Origin'] ?? '',
-            'destination' => $trackingData['Destination'] ?? '',
-            'weight' => $trackingData['Weight'] ?? '',
-            'serviceType' => $trackingData['Service_Type'] ?? '',
-            'events' => []
-        ];
-        
-        // Parse tracking events
-        if (!empty($trackingData['Events'])) {
-            $events = json_decode($trackingData['Events'], true);
-            if ($events) {
-                $response['events'] = $events;
+    return false;
+}
+
+$csvData = fetch_url_contents($sheetUrl);
+
+if ($csvData && trim($csvData) !== '') {
+    // Parse CSV and normalize headers to be forgiving of variations
+    $lines = preg_split('/\r?\n/', trim($csvData));
+    if (count($lines) > 0) {
+        $rawHeaders = str_getcsv(array_shift($lines));
+        $headers = [];
+        foreach ($rawHeaders as $h) {
+            $k = preg_replace('/[^A-Za-z0-9]/', '_', trim($h));
+            $k = strtoupper($k);
+            $headers[] = $k;
+        }
+
+        // Determine index of tracking id column (allow many header names)
+        $trackingIdx = null;
+        foreach ($headers as $i => $h) {
+            if (in_array($h, ['TRACKING_ID', 'TRACKINGID', 'ID', 'TRACKING'])) { $trackingIdx = $i; break; }
+        }
+
+        // If no explicit column found, assume first column
+        if ($trackingIdx === null) $trackingIdx = 0;
+
+        $found = null;
+        foreach ($lines as $line) {
+            if (trim($line) === '') continue;
+            $row = str_getcsv($line);
+            if (!isset($row[$trackingIdx])) continue;
+            if (strtoupper(trim($row[$trackingIdx])) === strtoupper(trim($trackingId))) {
+                // Build associative row with normalized header keys
+                $assoc = [];
+                for ($i = 0; $i < count($headers); $i++) {
+                    $assoc[$headers[$i]] = $row[$i] ?? '';
+                }
+
+                // Map to response fields (tolerant to header names)
+                $response = [
+                    'trackingId' => $assoc['TRACKING_ID'] ?? $assoc['ID'] ?? $assoc['TRACKINGID'] ?? $trackingId,
+                    'status' => $assoc['STATUS'] ?? '',
+                    'location' => $assoc['CURRENT_LOCATION'] ?? $assoc['LOCATION'] ?? '',
+                    'estimatedDelivery' => $assoc['ESTIMATED_DELIVERY'] ?? '',
+                    'lastUpdate' => $assoc['LAST_UPDATE'] ?? '',
+                    'customerName' => $assoc['CUSTOMER_NAME'] ?? '',
+                    'origin' => $assoc['ORIGIN'] ?? '',
+                    'destination' => $assoc['DESTINATION'] ?? '',
+                    'weight' => $assoc['WEIGHT'] ?? '',
+                    'serviceType' => $assoc['SERVICE_TYPE'] ?? '',
+                    'events' => []
+                ];
+
+                // Parse events if provided as JSON in a cell
+                if (!empty($assoc['EVENTS'])) {
+                    $events = json_decode($assoc['EVENTS'], true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($events)) {
+                        $response['events'] = $events;
+                    }
+                }
+
+                echo json_encode($response);
+                exit;
             }
         }
-        
-        echo json_encode($response);
-        exit;
     }
 }
 
