@@ -16,7 +16,19 @@ async function trackShipment() {
     trackBtn.disabled = true;
 
     try {
-        const response = await fetch(SHEET_URL);
+        // Use fetch with no-cors mode to handle CORS issues
+        const response = await fetch(SHEET_URL, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; TrackingBot/1.0)'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch data');
+        }
+        
         const csvText = await response.text();
         const data = parseCSV(csvText);
         
