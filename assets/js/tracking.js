@@ -66,7 +66,17 @@ function displayTrackingResults(shipment) {
                 </div>
                 <div class="col-md-6">
                     <h6><strong>Status:</strong></h6>
-                    <p><span class="badge badge-${getStatusColor(shipment.status)}">${shipment.status || 'N/A'}</span></p>
+                    <p><span class="badge badge-${getStatusColor(shipment.status)}">${shipment.status || 'Processing'}</span></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><strong>Customer:</strong></h6>
+                    <p>${shipment.customer_name || 'N/A'}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6><strong>Phone:</strong></h6>
+                    <p>${shipment.customer_phone || 'N/A'}</p>
                 </div>
             </div>
             <div class="row">
@@ -81,24 +91,28 @@ function displayTrackingResults(shipment) {
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    <h6><strong>Ship Date:</strong></h6>
-                    <p>${shipment.ship_date || 'N/A'}</p>
+                    <h6><strong>Current Location:</strong></h6>
+                    <p>${shipment.current_location || 'In Transit'}</p>
                 </div>
                 <div class="col-md-6">
                     <h6><strong>Expected Delivery:</strong></h6>
-                    <p>${shipment.expected_delivery || 'N/A'}</p>
+                    <p>${shipment.estimated_delivery || 'TBD'}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><strong>Weight:</strong></h6>
+                    <p>${shipment.weight || 'N/A'}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6><strong>Service Type:</strong></h6>
+                    <p>${shipment.service_type || 'Standard'}</p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <h6><strong>Current Location:</strong></h6>
-                    <p>${shipment.current_location || 'N/A'}</p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <h6><strong>Notes:</strong></h6>
-                    <p>${shipment.notes || 'No additional information available'}</p>
+                    <h6><strong>Last Update:</strong></h6>
+                    <p>${shipment.last_update || 'No recent updates'}</p>
                 </div>
             </div>
         </div>
