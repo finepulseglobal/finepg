@@ -260,10 +260,10 @@
                             <!--Hero form -->
                             <div class="hero-form">
                                 <h4>Track Your Shipment</h4>
-                                <form id="trackingForm" class="tracking-form">
+                                <form class="tracking-form" onsubmit="event.preventDefault(); trackShipment();">
                                     <div class="input-form">
-                                        <input type="text" id="trackingInput" placeholder="Enter Tracking ID" required>
-                                        <button type="submit" class="track-btn">Track Now</button>
+                                        <input type="text" id="trackingNumber" placeholder="Enter Tracking ID" required>
+                                        <button type="button" class="track-btn" onclick="trackShipment()">Track Now</button>
                                     </div>
                                 </form>
                                 <p class="form-note">Enter your tracking number to get real-time updates</p>
@@ -729,6 +729,7 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
     <!-- Jquery Plugins, main Jquery -->	
     <script src="./assets/js/plugins.js"></script>
     <script src="./assets/js/main.js"></script>
+    <script src="./assets/js/tracking.js"></script>
     
     <div class="whatsapp-wrapper">
         <div class="whatsapp-menu" id="whatsappMenu">
@@ -776,7 +777,7 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                         break;
                     case 'track':
                         phone = contacts.china;
-                        const trackingId = document.getElementById('trackingInput')?.value || '';
+                        const trackingId = document.getElementById('trackingNumber')?.value || '';
                         message = `Hello, I need help tracking my shipment${trackingId ? ': ' + trackingId : ''}.\n\nPlease provide current status and location.`;
                         break;
                     case 'support':
@@ -806,116 +807,7 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                     document.getElementById('whatsappMenu').classList.remove('active');
                 }
             });
-            
-            // Tracking System
-            document.getElementById('trackingForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const trackingId = document.getElementById('trackingInput').value.trim();
-                if (!trackingId) return;
-                
-                // Show loading
-                const resultsDiv = document.getElementById('trackingResults');
-                resultsDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-3">Fetching tracking information...</p></div>';
-                $('#trackingModal').modal('show');
-                
-                // Excel-based API call with improved error handling
-                fetch(`api/track-excel.php?tracking_id=${encodeURIComponent(trackingId)}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(t => { throw new Error('Network error: ' + response.status + ' ' + t); });
-                        }
-                        const ct = response.headers.get('content-type') || '';
-                        if (ct.indexOf('application/json') === -1) {
-                            return response.text().then(t => { throw new Error('Invalid response from server: ' + t); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.error) {
-                            displayTrackingError(data.error);
-                        } else {
-                            displayTrackingResults(data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Tracking fetch error:', error);
-                        displayTrackingError(error.message || 'Unable to fetch tracking information. Please try again.');
-                    });
-            });
-            
-            function displayTrackingError(message) {
-                document.getElementById('trackingResults').innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i> ${message}
-                    </div>
-                    <p class="text-center mt-3">
-                        <a href="#" onclick="openWhatsApp('track')" class="btn btn-primary" target="_blank">
-                            Contact Support
-                        </a>
-                    </p>
-                `;
-            }
-            
-            function displayTrackingResults(data) {
-                const statusColor = {
-                    'Delivered': 'success',
-                    'Out for Delivery': 'warning',
-                    'In Transit': 'info',
-                    'Customs Clearance': 'warning',
-                    'Processing': 'secondary',
-                    'Exception': 'danger'
-                };
-                
-                const html = `
-                    <div class="tracking-header mb-4">
-                        <h6><strong>Tracking ID:</strong> ${data.trackingId}</h6>
-                        <div class="alert alert-${statusColor[data.status] || 'info'}">
-                            <strong>Current Status:</strong> ${data.status}<br>
-                            <strong>Location:</strong> ${data.location}<br>
-                            <strong>Last Update:</strong> ${new Date(data.lastUpdate).toLocaleString()}
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <p><strong>Origin:</strong> ${data.origin}</p>
-                                <p><strong>Destination:</strong> ${data.destination}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Weight:</strong> ${data.weight}</p>
-                                <p><strong>Service:</strong> ${data.serviceType}</p>
-                            </div>
-                        </div>
-                        <p><strong>Estimated Delivery:</strong> ${new Date(data.estimatedDelivery).toLocaleDateString()}</p>
-                    </div>
-                    
-                    <div class="tracking-timeline">
-                        <h6 class="mb-3">Tracking History</h6>
-                        ${data.events.map(event => `
-                            <div class="timeline-item mb-3 pb-3 border-bottom">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <small class="text-muted">${new Date(event.event_date).toLocaleString()}</small>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <strong>${event.location}</strong>
-                                    </div>
-                                    <div class="col-md-5">
-                                        ${event.description || event.status}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="mt-4 p-3 bg-light rounded">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
-                            For real-time updates and support, contact us via WhatsApp.
-                        </small>
-                    </div>
-                `;
-                
-                document.getElementById('trackingResults').innerHTML = html;
-            }
+
             
             // Lazy-load elements with data-background attribute using IntersectionObserver
             (function(){
