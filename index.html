@@ -818,9 +818,18 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                 resultsDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-3">Fetching tracking information...</p></div>';
                 $('#trackingModal').modal('show');
                 
-                // Excel-based API call
+                // Excel-based API call with improved error handling
                 fetch(`api/track-excel.php?tracking_id=${encodeURIComponent(trackingId)}`)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(t => { throw new Error('Network error: ' + response.status + ' ' + t); });
+                        }
+                        const ct = response.headers.get('content-type') || '';
+                        if (ct.indexOf('application/json') === -1) {
+                            return response.text().then(t => { throw new Error('Invalid response from server: ' + t); });
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.error) {
                             displayTrackingError(data.error);
@@ -829,7 +838,8 @@ We work with trusted carriers, offer cargo insurance, professional packaging, an
                         }
                     })
                     .catch(error => {
-                        displayTrackingError('Unable to fetch tracking information. Please try again.');
+                        console.error('Tracking fetch error:', error);
+                        displayTrackingError(error.message || 'Unable to fetch tracking information. Please try again.');
                     });
             });
             

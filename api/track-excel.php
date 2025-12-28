@@ -23,10 +23,10 @@ $sampleData = [
         'weight' => '25.5 kg',
         'serviceType' => 'Air Freight',
         'events' => [
-            ['date' => '2024-01-15 09:30', 'location' => 'Shanghai, China', 'status' => 'Package picked up', 'description' => 'Shipment collected from sender'],
-            ['date' => '2024-01-16 14:20', 'location' => 'Shanghai Port', 'status' => 'Departed origin facility', 'description' => 'Package left origin country'],
-            ['date' => '2024-01-18 08:15', 'location' => 'Dubai, UAE', 'status' => 'In transit', 'description' => 'Package in transit hub'],
-            ['date' => '2024-01-20 16:45', 'location' => 'Dubai, UAE', 'status' => 'Customs clearance', 'description' => 'Processing customs documentation']
+            ['event_date' => '2024-01-15 09:30', 'location' => 'Shanghai, China', 'status' => 'Package picked up', 'description' => 'Shipment collected from sender'],
+            ['event_date' => '2024-01-16 14:20', 'location' => 'Shanghai Port', 'status' => 'Departed origin facility', 'description' => 'Package left origin country'],
+            ['event_date' => '2024-01-18 08:15', 'location' => 'Dubai, UAE', 'status' => 'In transit', 'description' => 'Package in transit hub'],
+            ['event_date' => '2024-01-20 16:45', 'location' => 'Dubai, UAE', 'status' => 'Customs clearance', 'description' => 'Processing customs documentation']
         ]
     ],
     'FPG001234568' => [
@@ -41,17 +41,17 @@ $sampleData = [
         'weight' => '15.3 kg',
         'serviceType' => 'Sea Freight',
         'events' => [
-            ['date' => '2024-01-10 10:00', 'location' => 'Guangzhou, China', 'status' => 'Package picked up', 'description' => 'Shipment collected from sender'],
-            ['date' => '2024-01-12 15:30', 'location' => 'Lagos Port', 'status' => 'Arrived destination country', 'description' => 'Package arrived in Nigeria'],
-            ['date' => '2024-01-15 09:00', 'location' => 'Lagos, Nigeria', 'status' => 'Customs cleared', 'description' => 'Customs clearance completed'],
-            ['date' => '2024-01-18 11:30', 'location' => 'Abuja, Nigeria', 'status' => 'Out for delivery', 'description' => 'Package out for final delivery'],
-            ['date' => '2024-01-20 14:15', 'location' => 'Abuja, Nigeria', 'status' => 'Delivered', 'description' => 'Package successfully delivered']
+            ['event_date' => '2024-01-10 10:00', 'location' => 'Guangzhou, China', 'status' => 'Package picked up', 'description' => 'Shipment collected from sender'],
+            ['event_date' => '2024-01-12 15:30', 'location' => 'Lagos Port', 'status' => 'Arrived destination country', 'description' => 'Package arrived in Nigeria'],
+            ['event_date' => '2024-01-15 09:00', 'location' => 'Lagos, Nigeria', 'status' => 'Customs cleared', 'description' => 'Customs clearance completed'],
+            ['event_date' => '2024-01-18 11:30', 'location' => 'Abuja, Nigeria', 'status' => 'Out for delivery', 'description' => 'Package out for final delivery'],
+            ['event_date' => '2024-01-20 14:15', 'location' => 'Abuja, Nigeria', 'status' => 'Delivered', 'description' => 'Package successfully delivered']
         ]
     ]
 ];
 
 // Try Google Sheets first, fallback to sample data
-$sheetUrl = 'https://docs.google.com/spreadsheets/d/11Gm1Nq1M03yEVy1QpH5Tv3d79VCzhNWSrngHdscxAN8/export?format=csv&gid=0';
+$sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRmDozHqFEhBIGZrqgERJO6KN9bycXwyTYFD1eKswfa3PnO22N6b-QFx08Ll-V7SCfYkNcRsWCGB2FM/pub?gid=0&single=true&output=csv';
 
 function fetch_url_contents($url) {
     // Try file_get_contents first
@@ -66,7 +66,8 @@ function fetch_url_contents($url) {
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         $data = curl_exec($ch);
         $err = curl_error($ch);
-        curl_close($ch);
+        // cURL handle is automatically closed when variable goes out of scope
+        unset($ch);
         if ($data !== false && $data !== '') return $data;
     }
     return false;
@@ -122,11 +123,28 @@ if ($csvData && trim($csvData) !== '') {
                     'events' => []
                 ];
 
-                // Parse events if provided as JSON in a cell
+                // Parse events if provided as JSON in a cell and normalize keys
                 if (!empty($assoc['EVENTS'])) {
                     $events = json_decode($assoc['EVENTS'], true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($events)) {
-                        $response['events'] = $events;
+                        $normalized = [];
+                        foreach ($events as $ev) {
+                            if (is_string($ev)) {
+                                // if events are simple strings, wrap them
+                                $normalized[] = ['event_date' => '', 'location' => '', 'status' => $ev, 'description' => ''];
+                                continue;
+                            }
+                            if (!is_array($ev)) continue;
+                            // convert common 'date' key to 'event_date' expected by front-end
+                            if (isset($ev['event_date'])) {
+                                // already correct
+                            } elseif (isset($ev['date'])) {
+                                $ev['event_date'] = $ev['date'];
+                                unset($ev['date']);
+                            }
+                            $normalized[] = $ev;
+                        }
+                        $response['events'] = $normalized;
                     }
                 }
 
