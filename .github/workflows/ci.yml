@@ -26,13 +26,6 @@ jobs:
           key: composer-${{ hashFiles('composer.json') }}
           restore-keys: composer-
 
-      - name: Install Composer dependencies
-        run: |
-          if [ -f composer.json ]; then
-            composer install --no-interaction --no-progress
-          else
-            echo "No composer.json found, skipping."
-          fi
 
       - name: PHP lint
         run: |
