@@ -211,10 +211,14 @@
     new WOW().init();
 
 
-    
-// 11. ---- Mailchimp js --------//  
+   
+    // 11. ---- Mailchimp js --------//  
     function mailChimp() {
-      $('#mc_embed_signup').find('form').ajaxChimp();
+      // Check if the form exists and if the ajaxChimp plugin is loaded
+      var $form = $('#mc_embed_signup').find('form');
+      if ($form.length > 0 && $.fn.ajaxChimp) {
+        $form.ajaxChimp();
+      }
     }
     mailChimp();
 
