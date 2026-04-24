@@ -59,6 +59,25 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+/* Bold section headings */
+.section-tittle h2 {
+    font-weight: 700;
+}
+
+.section-tittle span {
+    font-weight: 600;
+}
+
+/* Bold footer headings */
+.footer-tittle h4 {
+    font-weight: 700;
+}
+
+/* Bold FAQ questions */
+.card-header .btn {
+    font-weight: 700;
+}
+    
     .whatsapp-wrapper { right: 12px; bottom: 18px; gap: 6px; }
     .whatsapp-float { width: 48px; height: 48px; font-size: 24px; line-height: 48px; }
 }
