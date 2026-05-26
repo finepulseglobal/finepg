@@ -156,6 +156,14 @@
     .btn-outline:hover { background: #007bff; color: white; }
     .hero-form { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; z-index: 3; }
     .hero-form h4 { margin-bottom: 20px; color: #333; }
+    .logo-flex { display: inline-flex; align-items: center; gap: 12px; }
+    .logo-flex img { height: 48px; width: auto; display: block; }
+    .logo-title { display: flex; flex-direction: column; justify-content: center; line-height: 1.1; }
+    .brand-name { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; color: #0d2140; margin: 0; }
+    .brand-tagline { font-size: 0.78rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 3px; }
+    .hero__caption h1 span { color: #f15f22; }
+    .hero__caption p { max-width: 640px; }
+    .hero-subtext { margin-top: 20px; color: rgba(255,255,255,0.88); max-width: 720px; }
     .tracking-form .input-form { position: relative; }
     .tracking-form input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 5px; margin-bottom: 15px; }
     .track-btn { width: 100%; background: #f15f22; color: white; border: none; padding: 15px; border-radius: 5px; font-weight: 600; }
@@ -213,10 +221,13 @@
                         <!-- Logo -->
                         <div class="col-xl-2 col-lg-2">
                             <div class="logo">
-                                <a href="index.html">
-        <img src="assets/img/logo/logo.png" alt="FinePulse Global Limited Logo">
-        FinePulse Global
-        </a>
+                                <a href="index.html" class="logo-flex">
+                                    <img src="assets/img/logo/logo.png" alt="FinePulse Global Limited Logo">
+                                    <div class="logo-title">
+                                        <span class="brand-name">FinePulse Global</span>
+                                        <small class="brand-tagline">International Logistics & Freight</small>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                         <div class="col-xl-10 col-lg-10">
@@ -261,9 +272,10 @@
                         <div class="col-xl-8 col-lg-8">
                             <div class="hero__caption">
                                 <h1>Global Logistics <span>Made Simple</span></h1>
-                                <p>Ship anywhere in the world with confidence. From China to Nigeria, USA to Europe - we handle customs, duties, and delivery with precision.</p>
+                                <p>FinePulse Global Limited delivers secure, compliant freight solutions for Nigeria, China, the USA and worldwide trade lanes. Our team combines international shipping, customs clearance, and procurement into one dependable service.</p>
+                                <p class="hero-subtext">Experience a professional logistics partner that prioritizes clear communication, accurate documentation, and on-time delivery from origin to destination.</p>
                                 <div class="hero-btns">
-                                    <a href="#" onclick="openWhatsApp('quote')" class="btn hero-btn">Get Quote Now</a>
+                                    <a href="#" onclick="openWhatsApp('quote')" class="btn hero-btn">Get Quote</a>
                                 </div>
                             </div>
                         </div>
