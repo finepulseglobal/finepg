@@ -24,14 +24,17 @@
     <link rel="stylesheet" href="assets/css/nice-select.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
-        .service-hero { background: linear-gradient(135deg, #0d3a65, #1c75bc); color: #fff; padding: 120px 0; }
+        .service-hero { position: relative; background-image: url('assets/img/hero/h1_hero.jpg'); background-size: cover; background-position: center; padding: 75px 0; color: #fff; overflow: hidden; }
+        .service-hero::before { content: ''; position: absolute; inset: 0; background: rgba(1,10,28,0.58); z-index: 1; }
+        .service-hero .container { position: relative; z-index: 2; }
+        .service-hero .hero-caption { max-width: 680px; padding: 34px 30px; border-radius: 24px; background: rgba(4,18,44,0.82); box-shadow: 0 30px 70px rgba(0,0,0,0.28); }
         .logo-flex { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-flex img { height: 48px; width: auto; display: block; }
         .logo-title { display: flex; flex-direction: column; justify-content: center; line-height: 1.1; }
         .brand-name { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; color: #ffffff; margin: 0; }
         .brand-tagline { font-size: 0.72rem; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 3px; }
-        .service-hero h1 { font-size: 3rem; line-height: 1.1; margin-bottom: 20px; }
-        .service-hero p { font-size: 1.1rem; max-width: 720px; }
+        .service-hero h1 { font-size: 3.2rem; line-height: 1.05; margin-bottom: 24px; color: #ffffff; text-shadow: 0 16px 32px rgba(0,0,0,0.35); }
+        .service-hero p { font-size: 1.05rem; max-width: 700px; color: rgba(255,255,255,0.92); line-height: 1.85; margin-bottom: 24px; }
         .service-card { border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); border-radius: 16px; padding: 35px; transition: transform .3s ease, box-shadow .3s ease; }
         .service-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,.15); }
         .service-card h3 { margin-top: 18px; margin-bottom: 18px; }
