@@ -25,6 +25,11 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         .service-hero { background: linear-gradient(135deg, #0d3a65, #1c75bc); color: #fff; padding: 120px 0; }
+        .logo-flex { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-flex img { height: 48px; width: auto; display: block; }
+        .logo-title { display: flex; flex-direction: column; justify-content: center; line-height: 1.1; }
+        .brand-name { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; color: #ffffff; margin: 0; }
+        .brand-tagline { font-size: 0.72rem; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 3px; }
         .service-hero h1 { font-size: 3rem; line-height: 1.1; margin-bottom: 20px; }
         .service-hero p { font-size: 1.1rem; max-width: 720px; }
         .service-card { border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); border-radius: 16px; padding: 35px; transition: transform .3s ease, box-shadow .3s ease; }
@@ -50,9 +55,12 @@
                         <div class="row align-items-center">
                             <div class="col-xl-2 col-lg-2">
                                 <div class="logo">
-                                    <a href="index.html">
+                                    <a href="index.html" class="logo-flex">
                                         <img src="assets/img/logo/logo.png" alt="FinePulse Global Limited Logo">
-                                        FinePulse Global
+                                        <div class="logo-title">
+                                            <span class="brand-name">FinePulse Global</span>
+                                            <small class="brand-tagline">International Logistics & Freight</small>
+                                        </div>
                                     </a>
                                 </div>
                             </div>
