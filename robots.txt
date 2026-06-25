@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /track-result.html
+
+Sitemap: https://finepg.com/sitemap.xml

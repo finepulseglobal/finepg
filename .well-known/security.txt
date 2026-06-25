@@ -1,0 +1,7 @@
+Contact: mailto:security@finepg.com
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://www.finepg.com/.well-known/security.txt
+Policy: https://www.finepg.com/privacy.html
+Encryption: https://www.finepg.com/terms.html
+Acknowledgments: https://www.finepg.com/contact.html
