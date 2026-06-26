@@ -234,8 +234,12 @@
       });
     }
 
+    function getActivePanel() {
+      return contactForm.querySelector('.quote-wizard__panel.is-active') || contactForm.querySelector('.quote-wizard__panel[data-step-panel="1"]') || contactForm.querySelector('.quote-wizard__panel:not([hidden])');
+    }
+
     function showStep(step) {
-      const currentActive = contactForm.querySelector('.quote-wizard__panel.is-active');
+      const currentActive = getActivePanel();
       const currentStep = currentActive ? Number(currentActive.getAttribute('data-step-panel')) : 1;
       const nextPanel = contactForm.querySelector('.quote-wizard__panel[data-step-panel="' + step + '"]');
 
@@ -377,10 +381,36 @@
         const target = button.getAttribute('data-location-action');
         const input = target === 'pickup' ? contactForm.querySelector('#cfPickupLocation') : contactForm.querySelector('#cfDeliveryLocation');
         if (!input) return;
-        const query = input.value && input.value.trim() ? input.value.trim() : (target === 'pickup' ? 'pickup location' : 'delivery location');
+
         trackEvent('quote_location_helper', target, 1);
-        window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query), '_blank', 'noopener,noreferrer');
-        input.classList.add('is-valid');
+
+        const fillLocation = function (value) {
+          if (!value) return;
+          input.value = value;
+          input.classList.add('is-valid');
+          if (window && window.Event) {
+            input.dispatchEvent(new window.Event('input', { bubbles: true }));
+          } else {
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        };
+
+        if (navigator.geolocation && typeof navigator.geolocation.getCurrentPosition === 'function') {
+          navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position && position.coords && position.coords.latitude;
+            const lng = position && position.coords && position.coords.longitude;
+            if (lat !== undefined && lng !== undefined) {
+              fillLocation('Current location (' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ')');
+              return;
+            }
+            fillLocation('Current location');
+          }, function () {
+            fillLocation('Current location');
+          });
+          return;
+        }
+
+        fillLocation('Current location');
       });
     });
 
@@ -402,7 +432,8 @@
     stepButtons.forEach(function (button) {
       button.addEventListener('click', function () {
         const action = button.getAttribute('data-step-action');
-        const currentStep = Number(contactForm.querySelector('.quote-wizard__panel.is-active').getAttribute('data-step-panel'));
+        const currentActivePanel = getActivePanel();
+        const currentStep = currentActivePanel ? Number(currentActivePanel.getAttribute('data-step-panel')) : 1;
         if (action === 'next') {
           if (validateStep(currentStep)) {
             trackEvent('quote_step_advanced', 'Step ' + (currentStep + 1), currentStep + 1);
@@ -522,7 +553,27 @@
       confirm.hidden = false;
       confirm.textContent = 'Your estimate is ready. We have prepared emails for you and our logistics team.';
 
-      window.location.href = clientMailto;
+      function navigateToUrl(url) {
+        if (!url) return;
+
+        try {
+          if (window) {
+            window.__lastMailto = url;
+          }
+        } catch (error) {
+          // Ignore storage failures.
+        }
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.style.display = 'none';
+        link.setAttribute('rel', 'noopener noreferrer');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      navigateToUrl(clientMailto);
       window.setTimeout(function () {
         window.open(adminMailto, '_blank', 'noopener,noreferrer');
       }, 200);

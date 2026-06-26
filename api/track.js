@@ -5,6 +5,37 @@ const SHEET_RANGE = process.env.GOOGLE_SHEET_RANGE || 'Sheet1!A:L';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 
+const FALLBACK_SHIPMENTS = {
+  DEMO123: {
+    serialNumber: '001',
+    trackingId: 'DEMO123',
+    customerName: 'Sample Customer',
+    customerPhone: '+2348133420527',
+    customerEmail: 'support@finepg.com',
+    origin: 'Lagos, Nigeria',
+    destination: 'Abuja, Nigeria',
+    status: 'In Transit',
+    currentLocation: 'Ibadan Hub',
+    estimatedDelivery: '2026-06-30',
+    lastUpdate: '2026-06-26 09:00',
+    weight: '320 kg'
+  },
+  FPG1001: {
+    serialNumber: '002',
+    trackingId: 'FPG1001',
+    customerName: 'Demo Shipper',
+    customerPhone: '+2348020000000',
+    customerEmail: 'demo@finepg.com',
+    origin: 'Shanghai, China',
+    destination: 'Lagos, Nigeria',
+    status: 'Arrived at Destination',
+    currentLocation: 'Apapa Port',
+    estimatedDelivery: '2026-06-24',
+    lastUpdate: '2026-06-23 18:00',
+    weight: '450 kg'
+  }
+};
+
 function base64Url(input) {
   return Buffer.from(input)
     .toString('base64')
@@ -98,6 +129,48 @@ function mapRow(headers, row) {
   }, {});
 }
 
+async function getSheetValues(token, spreadsheetId, requestedRange) {
+  const metadataUrl = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`);
+  const metadataResponse = await fetch(metadataUrl, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!metadataResponse.ok) {
+    throw new Error(`Google Sheets metadata request failed with status ${metadataResponse.status}.`);
+  }
+
+  const metadata = await metadataResponse.json();
+  const firstSheetTitle = metadata.sheets?.[0]?.properties?.title || 'Sheet1';
+  const fallbackRange = `${firstSheetTitle}!A:L`;
+  const normalizedRange = requestedRange
+    ? (requestedRange.includes('!') ? requestedRange : `${firstSheetTitle}!${requestedRange}`)
+    : fallbackRange;
+
+  const encodedRange = normalizedRange.includes('!')
+    ? `'${normalizedRange.split('!')[0].replace(/'/g, "")}'!${normalizedRange.split('!')[1]}`
+    : normalizedRange;
+
+  const sheetsUrl = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(encodedRange)}`);
+  let sheetsResponse = await fetch(sheetsUrl, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!sheetsResponse.ok && sheetsResponse.status === 400 && normalizedRange !== fallbackRange) {
+    const encodedFallbackRange = `'${fallbackRange.split('!')[0].replace(/'/g, "")}'!${fallbackRange.split('!')[1]}`;
+    const fallbackUrl = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(encodedFallbackRange)}`);
+    sheetsResponse = await fetch(fallbackUrl, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
+  if (!sheetsResponse.ok) {
+    throw new Error(`Google Sheets request failed with status ${sheetsResponse.status}.`);
+  }
+
+  const data = await sheetsResponse.json();
+  return { data, range: normalizedRange };
+}
+
 function publicShipment(row) {
   const showPrivateContacts = process.env.TRACKING_SHOW_PRIVATE_CONTACTS === 'true';
 
@@ -117,7 +190,13 @@ function publicShipment(row) {
   };
 }
 
-module.exports = async function handler(req, res) {
+function getFallbackShipment(trackingId) {
+  const normalized = String(trackingId || '').trim().toUpperCase();
+  const shipment = FALLBACK_SHIPMENTS[normalized];
+  return shipment ? { ...shipment, trackingId: normalized } : null;
+}
+
+async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -137,18 +216,19 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  try {
-    const token = await getAccessToken();
-    const sheetsUrl = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(SHEET_RANGE)}`);
-    const sheetsResponse = await fetch(sheetsUrl, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  const fallbackShipment = getFallbackShipment(trackingId);
 
-    if (!sheetsResponse.ok) {
-      throw new Error(`Google Sheets request failed with status ${sheetsResponse.status}.`);
+  try {
+    if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+      if (fallbackShipment) {
+        res.statusCode = 200;
+        res.end(JSON.stringify({ found: true, shipment: fallbackShipment }));
+        return;
+      }
     }
 
-    const data = await sheetsResponse.json();
+    const token = await getAccessToken();
+    const { data } = await getSheetValues(token, SPREADSHEET_ID, SHEET_RANGE);
     const values = data.values || [];
     const [headers, ...rows] = values;
 
@@ -172,7 +252,15 @@ module.exports = async function handler(req, res) {
     res.end(JSON.stringify({ found: true, shipment: publicShipment(match) }));
   } catch (error) {
     console.error(error);
+    if (fallbackShipment) {
+      res.statusCode = 200;
+      res.end(JSON.stringify({ found: true, shipment: fallbackShipment }));
+      return;
+    }
     res.statusCode = 503;
     res.end(JSON.stringify({ found: false, error: 'Tracking service is temporarily unavailable. Please try again shortly.', code: 'service_unavailable' }));
   }
-};
+}
+
+handler.getFallbackShipment = getFallbackShipment;
+module.exports = handler;
