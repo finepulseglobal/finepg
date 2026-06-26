@@ -154,7 +154,7 @@ module.exports = async function handler(req, res) {
 
     if (!headers || !rows.length) {
       res.statusCode = 404;
-      res.end(JSON.stringify({ found: false, error: 'No shipment records are available.' }));
+      res.end(JSON.stringify({ found: false, error: 'No shipment records are available yet. Please try again shortly.', code: 'empty_source' }));
       return;
     }
 
@@ -164,7 +164,7 @@ module.exports = async function handler(req, res) {
 
     if (!match) {
       res.statusCode = 404;
-      res.end(JSON.stringify({ found: false, error: 'Tracking ID not found.' }));
+      res.end(JSON.stringify({ found: false, error: 'We could not find a shipment for that tracking ID yet. Please verify the number or try again shortly.', code: 'not_found' }));
       return;
     }
 
@@ -172,7 +172,7 @@ module.exports = async function handler(req, res) {
     res.end(JSON.stringify({ found: true, shipment: publicShipment(match) }));
   } catch (error) {
     console.error(error);
-    res.statusCode = 500;
-    res.end(JSON.stringify({ error: 'Tracking service is temporarily unavailable.' }));
+    res.statusCode = 503;
+    res.end(JSON.stringify({ found: false, error: 'Tracking service is temporarily unavailable. Please try again shortly.', code: 'service_unavailable' }));
   }
 };

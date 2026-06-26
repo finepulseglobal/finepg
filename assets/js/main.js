@@ -101,88 +101,434 @@
     });
   }
 
-  /* Contact form (contact.html) */
+  /* Mask public contact details */
+  function maskPublicContactDetails() {
+    document.querySelectorAll('a[href^="mailto:"]').forEach(function (link) {
+      const href = link.getAttribute('href');
+      if (href && href.toLowerCase().indexOf('finepg.com') !== -1) {
+        link.setAttribute('href', 'contact.html');
+        link.textContent = 'Contact via request form';
+      }
+    });
+
+    document.querySelectorAll('a[href^="tel:"]').forEach(function (link) {
+      link.setAttribute('href', 'contact.html');
+      link.textContent = 'Available on request';
+    });
+
+    document.querySelectorAll('span, p, li, div, a').forEach(function (element) {
+      const text = element.textContent || '';
+      if (text.includes('No 6. Hollandia Way') || text.includes('Ajao Estate') || text.includes('+86 134 1117 9135') || text.includes('+234 813 342 0527') || text.includes('info@finepg.com')) {
+        if (element.tagName.toLowerCase() === 'a') {
+          element.setAttribute('href', 'contact.html');
+          element.textContent = 'Contact via request form';
+        } else {
+          element.textContent = element.textContent.replace(/No 6\. Hollandia Way[^\n]*/gi, 'Location shared upon request');
+          element.textContent = element.textContent.replace(/\+86 134 1117 9135[^\n]*/gi, 'Phone available on request');
+          element.textContent = element.textContent.replace(/\+234 813 342 0527[^\n]*/gi, 'Phone available on request');
+          element.textContent = element.textContent.replace(/info@finepg\.com/gi, 'Contact via request form');
+          element.textContent = element.textContent.replace(/Ajao Estate/gi, 'requested location');
+        }
+      }
+    });
+
+    document.querySelectorAll('script[type="application/ld+json"]').forEach(function (script) {
+      try {
+        const original = script.textContent || '';
+        let updated = original.replace(/"email":"[^"]*"/gi, '"email":"contact@finepg.com"');
+        updated = updated.replace(/"telephone":"[^"]*"/gi, '"telephone":"[REDACTED]"');
+        updated = updated.replace(/"streetAddress":"[^"]*"/gi, '"streetAddress":"[REDACTED]"');
+        updated = updated.replace(/"addressLocality":"[^"]*"/gi, '"addressLocality":"[REDACTED]"');
+        updated = updated.replace(/"addressCountry":"[^"]*"/gi, '"addressCountry":"[REDACTED]"');
+        if (updated !== original) {
+          script.textContent = updated;
+        }
+      } catch (error) {
+        // Ignore malformed JSON-LD blocks.
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maskPublicContactDetails);
+  } else {
+    maskPublicContactDetails();
+  }
+
+  /* Quote calculator (contact.html) */
   const contactForm = document.getElementById('contactForm');
   if (contactForm) {
-    contactForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+    const wizardPanels = Array.from(contactForm.querySelectorAll('.quote-wizard__panel'));
+    const wizardSteps = Array.from(contactForm.querySelectorAll('.quote-wizard__step'));
+    const stepButtons = Array.from(contactForm.querySelectorAll('[data-step-action]'));
+    const quoteSummary = document.getElementById('quoteSummary');
+    const confirm = document.getElementById('cfConfirm');
+    const quoteResult = document.getElementById('quoteResult');
+    const locationButtons = Array.from(contactForm.querySelectorAll('[data-location-action]'));
+    const progressBar = contactForm.querySelector('.quote-wizard__progress-bar');
+    const cbmNote = document.getElementById('cbmCalcNote');
+    const cbmField = contactForm.querySelector('#cfCbm');
 
-      const fields = {
+    function getFields() {
+      return {
         name: contactForm.querySelector('#cfName'),
-        company: contactForm.querySelector('#cfCompany'),
         email: contactForm.querySelector('#cfEmail'),
         phone: contactForm.querySelector('#cfPhone'),
-        service: contactForm.querySelector('#cfService'),
-        message: contactForm.querySelector('#cfMessage'),
-        consent: contactForm.querySelector('#cfConsent')
+        pickupLocation: contactForm.querySelector('#cfPickupLocation'),
+        deliveryLocation: contactForm.querySelector('#cfDeliveryLocation'),
+        cbm: contactForm.querySelector('#cfCbm'),
+        length: contactForm.querySelector('#cfLength'),
+        width: contactForm.querySelector('#cfWidth'),
+        height: contactForm.querySelector('#cfHeight'),
+        pickupType: contactForm.querySelector('#cfPickupType'),
+        insurance: contactForm.querySelector('#cfInsurance'),
+        notes: contactForm.querySelector('#cfNotes')
       };
-      const confirm = document.getElementById('cfConfirm');
+    }
 
+    function clearErrors() {
+      const fields = getFields();
       Object.values(fields).forEach(function (field) {
         if (field && field.classList) field.classList.remove('is-invalid');
       });
+    }
 
-      if (!contactForm.checkValidity()) {
-        Object.values(fields).forEach(function (field) {
-          if (field && field.required && !field.checkValidity()) field.classList.add('is-invalid');
+    function updateSummary() {
+      if (!quoteSummary) return;
+      const fields = getFields();
+      const cbmValue = fields.cbm && fields.cbm.value ? parseFloat(fields.cbm.value).toFixed(1) : '—';
+      const pickupLocation = fields.pickupLocation && fields.pickupLocation.value ? fields.pickupLocation.value.trim() : '—';
+      const deliveryLocation = fields.deliveryLocation && fields.deliveryLocation.value ? fields.deliveryLocation.value.trim() : '—';
+      const pickupType = fields.pickupType && fields.pickupType.value ? (fields.pickupType.value === 'finepickup' ? 'FinePickup (we collect)' : 'Self delivery') : '—';
+      const insurance = fields.insurance && fields.insurance.value ? (fields.insurance.value === 'yes' ? 'Yes' : 'No') : '—';
+      quoteSummary.innerHTML = [
+        '<div class="quote-wizard__summary-item"><span>CBM</span><strong>' + cbmValue + '</strong></div>',
+        '<div class="quote-wizard__summary-item"><span>Pickup</span><strong>' + pickupLocation + '</strong></div>',
+        '<div class="quote-wizard__summary-item"><span>Delivery</span><strong>' + deliveryLocation + '</strong></div>',
+        '<div class="quote-wizard__summary-item"><span>Pickup type</span><strong>' + pickupType + '</strong></div>',
+        '<div class="quote-wizard__summary-item"><span>Insurance</span><strong>' + insurance + '</strong></div>'
+      ].join('');
+    }
+
+    function trackEvent(action, label, value) {
+      if (window.gtag) {
+        window.gtag('event', action, {
+          event_category: 'Quote Wizard',
+          event_label: label,
+          value: value
         });
+      }
+    }
+
+    function updateProgress(step) {
+      if (progressBar) {
+        progressBar.style.width = ((step / 4) * 100) + '%';
+      }
+    }
+
+    function updateStepNavigation(step) {
+      contactForm.querySelectorAll('.contact-form__back').forEach(function (button) {
+        const canGoBack = step > 1;
+        button.disabled = !canGoBack;
+        button.hidden = !canGoBack;
+      });
+    }
+
+    function showStep(step) {
+      const currentActive = contactForm.querySelector('.quote-wizard__panel.is-active');
+      const currentStep = currentActive ? Number(currentActive.getAttribute('data-step-panel')) : 1;
+      const nextPanel = contactForm.querySelector('.quote-wizard__panel[data-step-panel="' + step + '"]');
+
+      if (currentActive && nextPanel && currentStep !== step) {
+        currentActive.classList.remove('is-active');
+        currentActive.hidden = true;
+        window.setTimeout(function () {
+          nextPanel.classList.add('is-active');
+          nextPanel.hidden = false;
+        }, 40);
+      } else if (nextPanel) {
+        nextPanel.classList.add('is-active');
+        nextPanel.hidden = false;
+      }
+
+      wizardPanels.forEach(function (panel) {
+        if (Number(panel.getAttribute('data-step-panel')) !== step) {
+          panel.classList.remove('is-active');
+        }
+      });
+
+      wizardSteps.forEach(function (stepItem, index) {
+        const stepNumber = index + 1;
+        stepItem.classList.toggle('is-active', stepNumber === step);
+        stepItem.classList.toggle('is-complete', stepNumber < step);
+      });
+
+      updateProgress(step);
+      updateStepNavigation(step);
+
+      if (step === 4) {
+        updateSummary();
+      }
+    }
+
+    function calculateCbmFromDimensions(fields) {
+      const length = parseFloat(fields.length && fields.length.value ? fields.length.value : '0');
+      const width = parseFloat(fields.width && fields.width.value ? fields.width.value : '0');
+      const height = parseFloat(fields.height && fields.height.value ? fields.height.value : '0');
+      if ([length, width, height].some(function (value) { return Number.isNaN(value) || value <= 0; })) {
+        return null;
+      }
+      return (length * width * height) / 1000000;
+    }
+
+    function updateCbmHelper(estimatedCbm) {
+      if (!cbmNote) return;
+      if (estimatedCbm !== null) {
+        cbmNote.textContent = 'Estimated CBM: ' + estimatedCbm.toFixed(2) + ' m³ from the dimensions you entered.';
+        cbmNote.classList.add('is-active');
+      } else {
+        cbmNote.textContent = 'We will calculate CBM as length × width × height ÷ 1,000,000 when dimensions are provided.';
+        cbmNote.classList.remove('is-active');
+      }
+    }
+
+    function applyDerivedCbm() {
+      const fields = getFields();
+      const dimensionsCbm = calculateCbmFromDimensions(fields);
+      const isManualCbm = fields.cbm && fields.cbm.dataset.manual === 'true';
+
+      if (dimensionsCbm !== null && !isManualCbm) {
+        fields.cbm.value = dimensionsCbm.toFixed(2);
+        updateCbmHelper(dimensionsCbm);
+      } else if (dimensionsCbm === null) {
+        updateCbmHelper(null);
+      } else if (cbmField && cbmField.value && cbmField.value.trim()) {
+        updateCbmHelper(null);
+      }
+    }
+
+    function validateStep(step, showErrors) {
+      const fields = getFields();
+      if (showErrors !== false) {
+        clearErrors();
+      }
+      let isValid = true;
+
+      if (step === 1) {
+        const cbmValue = fields.cbm && fields.cbm.value ? parseFloat(fields.cbm.value) : NaN;
+        const dimensionsCbm = calculateCbmFromDimensions(fields);
+
+        if (!fields.cbm || !fields.cbm.checkValidity()) {
+          fields.cbm.classList.add('is-invalid');
+          isValid = false;
+        } else if ((Number.isNaN(cbmValue) || cbmValue <= 0) && dimensionsCbm === null) {
+          fields.cbm.classList.add('is-invalid');
+          isValid = false;
+        } else if (!Number.isNaN(cbmValue) && cbmValue > 0) {
+          fields.cbm.value = cbmValue.toFixed(2);
+          fields.cbm.dataset.manual = 'true';
+        } else if (dimensionsCbm !== null) {
+          fields.cbm.value = dimensionsCbm.toFixed(2);
+          fields.cbm.dataset.manual = 'false';
+        }
+      }
+
+      if (step === 2) {
+        if (!fields.pickupLocation || !fields.pickupLocation.checkValidity()) {
+          fields.pickupLocation.classList.add('is-invalid');
+          isValid = false;
+        }
+        if (!fields.deliveryLocation || !fields.deliveryLocation.checkValidity()) {
+          fields.deliveryLocation.classList.add('is-invalid');
+          isValid = false;
+        }
+      }
+
+      if (step === 3) {
+        if (!fields.pickupType || !fields.pickupType.checkValidity()) {
+          fields.pickupType.classList.add('is-invalid');
+          isValid = false;
+        }
+        if (!fields.insurance || !fields.insurance.checkValidity()) {
+          fields.insurance.classList.add('is-invalid');
+          isValid = false;
+        }
+      }
+
+      if (step === 4) {
+        const requiredContactFields = [fields.name, fields.email, fields.phone];
+        requiredContactFields.forEach(function (field) {
+          if (field && !field.checkValidity()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+          }
+        });
+      }
+
+      if (!isValid && showErrors !== false) {
         contactForm.reportValidity();
+      }
+
+      return isValid;
+    }
+
+    locationButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        const target = button.getAttribute('data-location-action');
+        const input = target === 'pickup' ? contactForm.querySelector('#cfPickupLocation') : contactForm.querySelector('#cfDeliveryLocation');
+        if (!input) return;
+        const query = input.value && input.value.trim() ? input.value.trim() : (target === 'pickup' ? 'pickup location' : 'delivery location');
+        trackEvent('quote_location_helper', target, 1);
+        window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query), '_blank', 'noopener,noreferrer');
+        input.classList.add('is-valid');
+      });
+    });
+
+    if (cbmField) {
+      cbmField.addEventListener('input', function () {
+        cbmField.dataset.manual = cbmField.value.trim() ? 'true' : 'false';
+        if (!cbmField.value.trim()) {
+          applyDerivedCbm();
+        }
+      });
+    }
+
+    [contactForm.querySelector('#cfLength'), contactForm.querySelector('#cfWidth'), contactForm.querySelector('#cfHeight')].forEach(function (input) {
+      if (input) {
+        input.addEventListener('input', applyDerivedCbm);
+      }
+    });
+
+    stepButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        const action = button.getAttribute('data-step-action');
+        const currentStep = Number(contactForm.querySelector('.quote-wizard__panel.is-active').getAttribute('data-step-panel'));
+        if (action === 'next') {
+          if (validateStep(currentStep)) {
+            trackEvent('quote_step_advanced', 'Step ' + (currentStep + 1), currentStep + 1);
+            showStep(currentStep + 1);
+          }
+        } else if (action === 'prev') {
+          trackEvent('quote_step_back', 'Step ' + (currentStep - 1), currentStep - 1);
+          showStep(currentStep - 1);
+        }
+      });
+    });
+
+    contactForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const fields = getFields();
+      clearErrors();
+
+      let hasError = false;
+      const requiredSteps = [1, 2, 3, 4];
+      const stepValidity = requiredSteps.map(function (step) {
+        return validateStep(step, false);
+      });
+
+      const cbmValue = parseFloat(fields.cbm.value);
+      const cbmValid = !Number.isNaN(cbmValue) && cbmValue > 0;
+      if (!cbmValid) {
+        fields.cbm.classList.add('is-invalid');
+        hasError = true;
+      }
+
+      if (stepValidity.some(function (isValid) { return !isValid; })) {
+        hasError = true;
+      }
+
+      if (hasError) {
+        const firstInvalidStep = stepValidity.findIndex(function (isValid) {
+          return !isValid;
+        });
+        const targetStep = firstInvalidStep === -1 ? 1 : firstInvalidStep + 1;
+        showStep(targetStep);
+        validateStep(targetStep, true);
         return;
       }
 
-      const selectedService = fields.service.options[fields.service.selectedIndex];
+      const pickupTypeLabel = fields.pickupType.value === 'finepickup' ? 'FinePickup (we collect)' : 'Self delivery';
+      const insuranceLabel = fields.insurance.value === 'yes' ? 'Yes' : 'No';
+      const pickupLocation = fields.pickupLocation.value.trim();
+      const deliveryLocation = fields.deliveryLocation.value.trim();
+      const routeMultiplier = /china|usa|canada|ghana|europe|uk|dubai/i.test(pickupLocation + ' ' + deliveryLocation) ? 1.25 : 1;
+      const baseFreight = Math.round(cbmValue * 95 * routeMultiplier);
+      const pickupFee = fields.pickupType.value === 'finepickup' ? 20 : 6;
+      const insuranceFee = fields.insurance.value === 'yes' ? Math.round(baseFreight * 0.03) : 0;
+      const handlingFee = 18;
+      const total = baseFreight + pickupFee + insuranceFee + handlingFee;
+      trackEvent('quote_submitted', 'Quote generated', total);
+
       const booking = {
         name: fields.name.value.trim(),
-        company: fields.company.value.trim() || 'Not provided',
         email: fields.email.value.trim(),
         phone: fields.phone.value.trim(),
-        service: selectedService ? selectedService.text.trim() : 'Not selected',
-        message: fields.message.value.trim()
+        pickupLocation: pickupLocation,
+        deliveryLocation: deliveryLocation,
+        cbm: cbmValue.toFixed(1),
+        pickupType: pickupTypeLabel,
+        insurance: insuranceLabel,
+        notes: fields.notes.value.trim() || 'No additional notes provided.'
       };
 
       const bodyLines = [
-        'New FinePulse booking request',
+        'FinePulse Quote Request',
         '',
-        'Full Name: ' + booking.name,
-        'Company: ' + booking.company,
+        'Client Name: ' + booking.name,
         'Email: ' + booking.email,
         'Phone: ' + booking.phone,
-        'Service Required: ' + booking.service,
+        'Pickup Location: ' + booking.pickupLocation,
+        'Delivery Location: ' + booking.deliveryLocation,
+        'CBM: ' + booking.cbm,
+        'Pickup Type: ' + booking.pickupType,
+        'Insurance: ' + booking.insurance,
+        'Shipment Notes: ' + booking.notes,
         '',
-        'Shipment Details:',
-        booking.message,
+        'Estimated Quote Breakdown:',
+        'Base Freight: USD ' + baseFreight,
+        'Pickup Handling: USD ' + pickupFee,
+        'Insurance: USD ' + insuranceFee,
+        'Processing Fee: USD ' + handlingFee,
+        'Estimated Total: USD ' + total,
         '',
+        'Payment Process: Manual payment after quote confirmation. FinePulse will reply with the final cost and payment instructions.',
         'Submitted from: ' + window.location.href
       ];
 
-      const subject = 'New Booking Request - ' + booking.name;
-      const emailUrl = 'mailto:book-ings@finepg.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyLines.join('\n'));
-      const whatsappUrl = 'https://wa.me/2348133420527?text=' + encodeURIComponent(bodyLines.join('\n'));
+      const subject = 'FinePulse Quote Request - ' + booking.name + ' - CBM ' + booking.cbm;
+      const clientMailto = 'mailto:' + encodeURIComponent(booking.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyLines.join('\n'));
+      const adminMailto = 'mailto:book-ings@finepg.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyLines.join('\n'));
 
-      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      window.location.href = emailUrl;
+      quoteResult.hidden = false;
+      quoteResult.innerHTML = [
+        '<h4 class="quote-calculator__title">Estimated quote ready</h4>',
+        '<div class="quote-calculator__amount">USD ' + total + '</div>',
+        '<ul class="quote-calculator__breakdown">',
+        '<li><span>Base freight</span><strong>USD ' + baseFreight + '</strong></li>',
+        '<li><span>Pickup handling</span><strong>USD ' + pickupFee + '</strong></li>',
+        '<li><span>Insurance</span><strong>USD ' + insuranceFee + '</strong></li>',
+        '<li><span>Processing fee</span><strong>USD ' + handlingFee + '</strong></li>',
+        '</ul>',
+        '<p class="quote-calculator__note">This is an indicative estimate. FinePulse will reply with the final cost and manual payment steps by email.</p>'
+      ].join('');
 
-      confirm.replaceChildren(
-        document.createTextNode('Your booking details are ready. If nothing opens automatically, '),
-        (() => {
-          const emailLink = document.createElement('a');
-          emailLink.href = emailUrl;
-          emailLink.textContent = 'send by email';
-          return emailLink;
-        })(),
-        document.createTextNode(' or '),
-        (() => {
-          const whatsappLink = document.createElement('a');
-          whatsappLink.href = whatsappUrl;
-          whatsappLink.target = '_blank';
-          whatsappLink.rel = 'noopener noreferrer';
-          whatsappLink.textContent = 'send on WhatsApp';
-          return whatsappLink;
-        })(),
-        document.createTextNode('.')
-      );
+      localStorage.setItem('finepulseLastQuote', JSON.stringify({
+        ...booking,
+        total: total,
+        generatedAt: new Date().toISOString()
+      }));
+
       confirm.hidden = false;
+      confirm.textContent = 'Your estimate is ready. We have prepared emails for you and our logistics team.';
+
+      window.location.href = clientMailto;
+      window.setTimeout(function () {
+        window.open(adminMailto, '_blank', 'noopener,noreferrer');
+      }, 200);
     });
+
+    showStep(1);
   }
 
 })();
@@ -262,12 +608,12 @@
     },
     {
       keywords: ['office', 'address', 'location', 'visit'],
-      reply: 'FinePulse is located at No 6. Hollandia Way, Ajao Estate, Lagos, Nigeria.',
+      reply: 'FinePulse can share the office location directly through the contact request form once you reach out.',
       links: [{ label: 'Contact FinePulse', href: 'contact.html' }]
     },
     {
       keywords: ['email', 'phone', 'contact', 'call', 'whatsapp'],
-      reply: 'You can reach FinePulse by email at info@finepg.com or by phone/WhatsApp on +234 813 342 0527. For booking requests, use book-ings@finepg.com.',
+      reply: 'FinePulse can be contacted through the request form, and the team will reply with the preferred contact method.',
       links: [{ label: 'Contact page', href: 'contact.html' }]
     },
     {
@@ -317,12 +663,6 @@
       String(now.getDate()).padStart(2, '0');
     const random = Math.random().toString(36).slice(2, 6).toUpperCase();
     return 'FP-' + stamp + '-' + random;
-  }
-
-  function getPagePath(href) {
-    if (/^https?:\/\//i.test(href)) return href;
-    const base = window.location.pathname.replace(/[^/]*$/, '');
-    return base + href;
   }
 
   function findKnowledgeReply(message) {
@@ -717,6 +1057,7 @@
   const resultInput = document.getElementById('trackingResultInput');
   const loading = document.getElementById('trackingLoading');
   const error = document.getElementById('trackingError');
+  const info = document.getElementById('trackingInfo');
   const card = document.getElementById('trackingCard');
 
   if (!resultForm || !resultInput) return;
@@ -726,24 +1067,42 @@
     if (el) el.textContent = value || '-';
   }
 
-  function showLoading() {
-    loading.hidden = false;
-    error.hidden = true;
-    card.hidden = true;
+  function hideAllStates() {
+    if (loading) loading.hidden = true;
+    if (error) error.hidden = true;
+    if (info) info.hidden = true;
+    if (card) card.hidden = true;
   }
 
-  function showError(message) {
-    loading.hidden = true;
-    error.hidden = false;
-    card.hidden = true;
-    const text = error.querySelector('p');
-    if (text) text.textContent = message || 'Confirm the tracking ID and try again. If you still need help, contact FinePulse support.';
+  function showLoading() {
+    hideAllStates();
+    if (loading) loading.hidden = false;
+  }
+
+  function showInfo(title, message) {
+    hideAllStates();
+    if (info) {
+      info.hidden = false;
+      const titleEl = info.querySelector('h2');
+      const textEl = info.querySelector('p');
+      if (titleEl) titleEl.textContent = title || 'Need help finding a shipment?';
+      if (textEl) textEl.textContent = message || 'Use the tracking number from your booking, bill of lading, or confirmation email. New shipments can take a few minutes to appear.';
+    }
+  }
+
+  function showError(message, hint) {
+    hideAllStates();
+    if (error) {
+      error.hidden = false;
+      const text = error.querySelector('p');
+      const combinedMessage = [message || 'Confirm the tracking ID and try again. If you still need help, contact FinePulse support.', hint].filter(Boolean).join(' ');
+      if (text) text.textContent = combinedMessage;
+    }
   }
 
   function showShipment(shipment) {
-    loading.hidden = true;
-    error.hidden = true;
-    card.hidden = false;
+    hideAllStates();
+    if (card) card.hidden = false;
 
     setText('trackingIdTitle', shipment.trackingId);
     setText('trackingStatus', shipment.status);
@@ -767,7 +1126,10 @@
       });
       const payload = await response.json();
       if (!response.ok || !payload.found) {
-        showError(payload.error || 'Tracking ID not found.');
+        const hint = payload.code === 'service_unavailable'
+          ? 'Please try again in a few minutes or contact support if the issue continues.'
+          : 'Please verify the tracking ID and try again.';
+        showError(payload.error || 'Tracking ID not found.', hint);
         return;
       }
       showShipment(payload.shipment);
@@ -796,10 +1158,7 @@
     resultInput.value = initialTrackingId;
     loadShipment(initialTrackingId);
   } else {
-    loading.hidden = true;
-    error.hidden = false;
-    card.hidden = true;
-    showError('Enter a tracking ID to view shipment details.');
+    showInfo('Need a tracking ID?', 'Use the tracking number from your booking, bill of lading, or confirmation email. New shipments can take a few minutes to appear.');
   }
 })();
 
